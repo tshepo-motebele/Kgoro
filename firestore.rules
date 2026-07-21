@@ -1,0 +1,138 @@
+rules_version = '2';
+
+// Deploy with: firebase deploy --only firestore:rules
+// Requires an admin custom claim set via Cloud Function (see functions/admin_setup.js):
+//   admin.auth().setCustomUserClaims(uid, { admin: true })
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.admin == true;
+    }
+
+    // Returns the vendor doc for a given vendorId (used in product rules).
+    function vendorData(vendorId) {
+      return get(/databases/$(database)/documents/vendors/$(vendorId)).data;
+    }
+
+    function isVendorOwner(vendorId) {
+      return isSignedIn() && vendorData(vendorId).ownerId == request.auth.uid;
+    }
+
+    // ── Users ─────────────────────────────────────────────────────────────────
+    // Users can read/write only their own profile. isResidencyVerified and
+    // isDriver are locked — only admin/Cloud Function may change them.
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid) &&
+        request.resource.data.isResidencyVerified == resource.data.isResidencyVerified &&
+        request.resource.data.isDriver == resource.data.isDriver;
+      allow update: if isAdmin();
+    }
+
+    // ── Drivers ───────────────────────────────────────────────────────────────
+    match /drivers/{uid} {
+      allow read: if isOwner(uid) || isAdmin() ||
+        (isSignedIn() && resource.data.approvalStatus == 1 && resource.data.isOnline == true);
+      allow create: if isOwner(uid) &&
+        request.resource.data.approvalStatus == 0; // must start pendingReview
+      allow update: if isOwner(uid) &&
+        // Driver may update location/online status but NOT approvalStatus
+        request.resource.data.approvalStatus == resource.data.approvalStatus;
+      allow update: if isAdmin();
+    }
+
+    // ── Vouches ───────────────────────────────────────────────────────────────
+    match /vouches/{voucherId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() &&
+        request.resource.data.voucherUid == request.auth.uid;
+    }
+
+    // ── Vendors ───────────────────────────────────────────────────────────────
+    match /vendors/{vendorId} {
+      // Anyone can browse the catalogue (needed for home screen)
+      allow read: if true;
+
+      // A signed-in user may CREATE a vendor application, but:
+      //  - ownerId must match their UID
+      //  - approvalStatus must start at 0 (pendingReview) — can't self-approve
+      allow create: if isSignedIn() &&
+        request.resource.data.ownerId == request.auth.uid &&
+        request.resource.data.approvalStatus == 0;
+
+      // Vendor owner may UPDATE their own doc (store settings, open/close)
+      // but CANNOT change approvalStatus or ownerId — those are admin-only.
+      allow update: if isSignedIn() &&
+        resource.data.ownerId == request.auth.uid &&
+        request.resource.data.approvalStatus == resource.data.approvalStatus &&
+        request.resource.data.ownerId == resource.data.ownerId;
+
+      // Admin can do anything (approve/reject/modify)
+      allow update, delete: if isAdmin();
+
+      // ── Products (vendor subcollection) ────────────────────────────────────
+      match /products/{productId} {
+        // Anyone can read the product catalogue
+        allow read: if true;
+
+        // The vendor owner can fully manage their own products
+        allow create, update, delete: if isVendorOwner(vendorId);
+
+        // Admin can always intervene
+        allow create, update, delete: if isAdmin();
+      }
+    }
+
+    // ── Orders ────────────────────────────────────────────────────────────────
+    match /orders/{orderId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.customerId == request.auth.uid;
+
+      allow read: if isSignedIn() &&
+        (resource.data.customerId == request.auth.uid ||
+         resource.data.driverId == request.auth.uid ||
+         isVendorOwner(resource.data.vendorId) ||
+         isAdmin());
+
+      // Driver or vendor can update status; admin can do anything
+      allow update: if isSignedIn() &&
+        (resource.data.driverId == request.auth.uid ||
+         isVendorOwner(resource.data.vendorId) ||
+         isAdmin());
+    }
+
+    // ── Rides ─────────────────────────────────────────────────────────────────
+    match /rides/{rideId} {
+      allow create: if isSignedIn() &&
+        request.resource.data.customerId == request.auth.uid;
+
+      allow read: if isSignedIn() &&
+        (resource.data.customerId == request.auth.uid ||
+         resource.data.driverId == request.auth.uid ||
+         isAdmin());
+
+      allow update: if isSignedIn() &&
+        (resource.data.driverId == request.auth.uid || isAdmin());
+    }
+
+    // ── FCM tokens ────────────────────────────────────────────────────────────
+    // Each user stores their own FCM token so the Cloud Function can look it up.
+    match /fcm_tokens/{uid} {
+      allow read, write: if isOwner(uid);
+      allow read: if isAdmin();
+    }
+  }
+}
