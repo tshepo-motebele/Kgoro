@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import '../../core/theme.dart';
-import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../widgets/common_widgets.dart';
 

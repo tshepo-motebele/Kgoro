@@ -4,15 +4,17 @@
  * Deploy:  cd functions && npm install && cd .. && firebase deploy --only functions
  *
  * Functions:
- *   onOrderCreated    — match driver, deduct stock, send FCM offers to top 3
+ *   onOrderCreated    — match driver, deduct stock (skipped for cab orders), send FCM offers to top 3
  *   onRideCreated     — match driver, send FCM offers to top 3
  *   onDriverAccept    — driver accepts a job (callable), transactional assignment
  *   setAdminClaim     — callable (existing-admin only) to grant admin custom claim
  *   onVendorApproved  — notify vendor owner via FCM when their app is approved
+ *   onUserDeleted     — clean up Firestore user doc + FCM token on account deletion
  */
 
 const { onDocumentCreated, onDocumentUpdated } = require('firebase-functions/v2/firestore');
 const { onCall, HttpsError }                   = require('firebase-functions/v2/https');
+const { beforeUserDeleted }                    = require('firebase-functions/v2/identity');
 const { initializeApp }                         = require('firebase-admin/app');
 const { getFirestore, FieldValue }              = require('firebase-admin/firestore');
 const { getMessaging }                          = require('firebase-admin/messaging');
@@ -121,32 +123,35 @@ exports.onOrderCreated = onDocumentCreated('orders/{orderId}', async (event) => 
   const orderRef = event.data.ref;
   const order    = event.data.data();
 
-  const vendorRef = db.collection('vendors').doc(order.vendorId);
-
   // ── Atomic stock check + deduction ──────────────────────────────────────────
-  try {
-    await db.runTransaction(async (tx) => {
-      for (const item of order.items) {
-        const productRef = vendorRef.collection('products').doc(item.productId);
-        const productDoc = await tx.get(productRef);
-        if (!productDoc.exists) throw new Error(`Product ${item.productId} not found`);
+  // Only applies to vendor-backed orders (groceries, food, liquor).
+  // Cab/ride orders have no vendorId and skip this block entirely.
+  if (order.vendorId) {
+    const vendorRef = db.collection('vendors').doc(order.vendorId);
+    try {
+      await db.runTransaction(async (tx) => {
+        for (const item of order.items) {
+          const productRef = vendorRef.collection('products').doc(item.productId);
+          const productDoc = await tx.get(productRef);
+          if (!productDoc.exists) throw new Error(`Product ${item.productId} not found`);
 
-        const qty = productDoc.data().quantity ?? 0;
-        if (qty < item.qty) {
-          throw new Error(`Insufficient stock for ${item.name}: only ${qty} left`);
+          const qty = productDoc.data().quantity ?? 0;
+          if (qty < item.qty) {
+            throw new Error(`Insufficient stock for ${item.name}: only ${qty} left`);
+          }
+          tx.update(productRef, { quantity: FieldValue.increment(-item.qty) });
         }
-        tx.update(productRef, { quantity: FieldValue.increment(-item.qty) });
-      }
-      // Mark stock confirmed
-      tx.update(orderRef, { stockConfirmed: true });
-    });
-  } catch (err) {
-    // Stock unavailable — cancel order immediately
-    await orderRef.update({
-      status:            6, // cancelled
-      cancellationReason: err.message,
-    });
-    return;
+        // Mark stock confirmed
+        tx.update(orderRef, { stockConfirmed: true });
+      });
+    } catch (err) {
+      // Stock unavailable — cancel order immediately
+      await orderRef.update({
+        status:            6, // cancelled
+        cancellationReason: err.message,
+      });
+      return;
+    }
   }
 
   // ── Driver matching ──────────────────────────────────────────────────────────
@@ -344,4 +349,24 @@ exports.onVendorApproved = onDocumentUpdated('vendors/{vendorId}', async (event)
     body:  `${after.name} is now live on Kgoro. Start adding your products!`,
     data:  { type: 'VENDOR_APPROVED', vendorId: event.params.vendorId },
   });
+});
+
+// ─── 7. User deleted → clean up Firestore + FCM token ────────────────────────
+// Fires when a user's Firebase Auth account is deleted (from console, app, or
+// via Admin SDK). Removes their Firestore profile and FCM token so there are
+// no orphaned documents or stale push-notification targets.
+
+exports.onUserDeleted = beforeUserDeleted(async (event) => {
+  const uid = event.data.uid;
+  if (!uid) return;
+
+  const batch = db.batch();
+
+  // Delete the user profile document
+  batch.delete(db.collection('users').doc(uid));
+
+  // Delete the FCM token document
+  batch.delete(db.collection('fcm_tokens').doc(uid));
+
+  await batch.commit();
 });

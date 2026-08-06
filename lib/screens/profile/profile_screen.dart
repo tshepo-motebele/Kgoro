@@ -103,7 +103,7 @@ class ProfileScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
           OutlinedButton.icon(
-            onPressed: () => ref.read(authServiceProvider).signOut(),
+            onPressed: () => ref.read(authServiceProvider).signOutAndCleanup(),
             icon: const Icon(Icons.logout_rounded, color: AppColors.error),
             label: const Text('Sign out', style: TextStyle(color: AppColors.error)),
             style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.error)),

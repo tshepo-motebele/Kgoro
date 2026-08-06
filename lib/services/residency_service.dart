@@ -1,5 +1,4 @@
 import '../core/utils.dart';
-import '../models/models.dart';
 
 enum ResidencyCheckLevel { fail, weak, moderate, strong }
 

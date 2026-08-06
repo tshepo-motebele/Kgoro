@@ -40,6 +40,38 @@ final currentDriverProfileProvider = StreamProvider<DriverProfile?>((ref) {
   );
 });
 
+/// Live stream of orders for the currently signed-in customer.
+final customerOrdersProvider = StreamProvider<List<KgoroOrder>>((ref) {
+  final authState = ref.watch(authStateProvider);
+  return authState.when(
+    data: (user) {
+      if (user == null) return Stream.value([]);
+      return ref.watch(firestoreServiceProvider).watchCustomerOrders(user.uid);
+    },
+    loading: () => Stream.value([]),
+    error: (_, __) => Stream.value([]),
+  );
+});
+
+/// Live stream of rides for the currently signed-in customer.
+final customerRidesProvider = StreamProvider<List<RideRequest>>((ref) {
+  final authState = ref.watch(authStateProvider);
+  return authState.when(
+    data: (user) {
+      if (user == null) return Stream.value([]);
+      return ref.watch(firestoreServiceProvider).watchCustomerRides(user.uid);
+    },
+    loading: () => Stream.value([]),
+    error: (_, __) => Stream.value([]),
+  );
+});
+
+/// Live stream of a vendor's incoming orders, keyed by vendorId.
+final vendorOrdersProvider =
+    StreamProvider.family<List<KgoroOrder>, String>((ref, vendorId) {
+  return ref.watch(firestoreServiceProvider).watchVendorOrders(vendorId);
+});
+
 /// Cart state — kept simple (in-memory, per-vendor) since orders are
 /// single-vendor. A future iteration could persist this locally with
 /// shared_preferences for cart recovery after app kill.
@@ -56,8 +88,15 @@ class CartNotifier extends StateNotifier<List<CartItem>> {
     vendorId = product.vendorId;
     final index = state.indexWhere((c) => c.product.id == product.id);
     if (index >= 0) {
-      state[index].quantity++;
-      state = [...state];
+      // Build an entirely new list with the updated quantity — never mutate
+      // the existing list or its elements as Riverpod tracks identity.
+      state = [
+        for (int i = 0; i < state.length; i++)
+          if (i == index)
+            CartItem(product: state[i].product, quantity: state[i].quantity + 1)
+          else
+            state[i],
+      ];
     } else {
       state = [...state, CartItem(product: product)];
     }

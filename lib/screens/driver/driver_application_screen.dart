@@ -8,7 +8,6 @@ import '../../core/utils.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/residency_service.dart';
-import '../../widgets/common_widgets.dart';
 
 class DriverApplicationScreen extends ConsumerStatefulWidget {
   const DriverApplicationScreen({super.key});

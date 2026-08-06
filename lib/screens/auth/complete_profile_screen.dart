@@ -6,7 +6,6 @@ import '../../core/utils.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../services/residency_service.dart';
-import '../../widgets/common_widgets.dart';
 
 class CompleteProfileScreen extends ConsumerStatefulWidget {
   final String uid;
@@ -25,7 +24,6 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
   bool _loading = false;
   bool _locating = false;
   Position? _position;
-  ResidencyCheckResult? _residencyResult;
 
   Future<void> _detectLocation() async {
     setState(() => _locating = true);
@@ -65,7 +63,7 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
       deviceLng: _position?.longitude,
       selectedLocalArea: _selectedArea!,
     );
-    setState(() => _residencyResult = result);
+
 
     final user = AppUser(
       id: widget.uid,

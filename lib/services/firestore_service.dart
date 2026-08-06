@@ -10,6 +10,7 @@ import '../core/constants.dart';
 ///   orders/{orderId}
 ///   rides/{rideId}
 ///   vouches/{voucherUid}_{applicantUid}
+///   fcm_tokens/{uid}
 class FirestoreService {
   final _db = FirebaseFirestore.instance;
 
@@ -145,22 +146,59 @@ class FirestoreService {
   Future<DocumentReference> createOrder(Map<String, dynamic> orderData) =>
       _db.collection('orders').add(orderData);
 
-  Stream<QuerySnapshot> watchCustomerOrders(String uid) => _db
+  /// Returns a typed live stream of all orders for [uid] as customer.
+  Stream<List<KgoroOrder>> watchCustomerOrders(String uid) => _db
       .collection('orders')
       .where('customerId', isEqualTo: uid)
       .orderBy('createdAt', descending: true)
-      .snapshots();
+      .snapshots()
+      .map((s) => s.docs.map((d) => KgoroOrder.fromMap(d.id, d.data())).toList());
 
-  Stream<DocumentSnapshot> watchOrder(String orderId) =>
-      _db.collection('orders').doc(orderId).snapshots();
+  /// Returns a typed live stream of a single order document.
+  Stream<KgoroOrder?> watchOrder(String orderId) =>
+      _db.collection('orders').doc(orderId).snapshots().map(
+            (d) => d.exists ? KgoroOrder.fromMap(d.id, d.data()!) : null,
+          );
 
   Future<void> updateOrderStatus(String orderId, OrderStatus status) =>
       _db.collection('orders').doc(orderId).update({'status': status.index});
+
+  /// Cancels an order — only valid while status is still [OrderStatus.pending].
+  Future<void> cancelOrder(String orderId, {String? reason}) =>
+      _db.collection('orders').doc(orderId).update({
+        'status': OrderStatus.cancelled.index,
+        if (reason != null) 'cancellationReason': reason,
+      });
 
   // ---- Rides ----
   Future<DocumentReference> createRideRequest(Map<String, dynamic> data) =>
       _db.collection('rides').add(data);
 
-  Stream<DocumentSnapshot> watchRide(String rideId) =>
-      _db.collection('rides').doc(rideId).snapshots();
+  /// Returns a typed live stream of a single ride document.
+  Stream<RideRequest?> watchRide(String rideId) =>
+      _db.collection('rides').doc(rideId).snapshots().map(
+            (d) => d.exists ? RideRequest.fromMap(d.id, d.data()!) : null,
+          );
+
+  /// Returns a typed live stream of all rides requested by [uid].
+  Stream<List<RideRequest>> watchCustomerRides(String uid) => _db
+      .collection('rides')
+      .where('customerId', isEqualTo: uid)
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map((s) => s.docs.map((d) => RideRequest.fromMap(d.id, d.data())).toList());
+
+  Future<void> updateRideStatus(String rideId, OrderStatus status) =>
+      _db.collection('rides').doc(rideId).update({'status': status.index});
+
+  // ---- FCM Token management ----
+  /// Deletes the FCM token document for [uid]. Call on sign-out to prevent
+  /// the Cloud Function from sending notifications to a stale device.
+  Future<void> deleteToken(String uid) async {
+    try {
+      await _db.collection('fcm_tokens').doc(uid).delete();
+    } catch (_) {
+      // Token may not exist if this is a new device or already deleted.
+    }
+  }
 }

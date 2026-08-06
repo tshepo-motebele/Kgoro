@@ -17,13 +17,13 @@ class OrderTrackingScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: const Text('Order tracking')),
-      body: StreamBuilder<DocumentSnapshot>(
+      body: StreamBuilder<KgoroOrder?>(
         stream: ref.read(firestoreServiceProvider).watchOrder(orderId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const KgoroLoader();
           }
-          if (!snapshot.hasData || !snapshot.data!.exists) {
+          if (!snapshot.hasData || snapshot.data == null) {
             return const EmptyState(
               icon: Icons.receipt_long_rounded,
               title: 'Order not found',
@@ -31,12 +31,12 @@ class OrderTrackingScreen extends ConsumerWidget {
             );
           }
 
-          final data   = snapshot.data!.data() as Map<String, dynamic>;
-          final status = OrderStatus.values[data['status'] as int? ?? 0];
-          final total  = (data['total'] as num?)?.toDouble() ?? 0;
-          final items  = (data['items'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-          final area   = data['dropoffArea'] as String? ?? '';
-          final driverId = data['driverId'] as String?;
+          final order    = snapshot.data!;
+          final status   = order.status;
+          final total    = order.total;
+          final items    = order.items;
+          final area     = order.dropoffArea;
+          final driverId = order.driverId;
 
           return ListView(
             padding: const EdgeInsets.all(20),

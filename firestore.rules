@@ -31,14 +31,18 @@ service cloud.firestore {
     }
 
     // ── Users ─────────────────────────────────────────────────────────────────
-    // Users can read/write only their own profile. isResidencyVerified and
-    // isDriver are locked — only admin/Cloud Function may change them.
+    // Users can read/write only their own profile.
+    // isResidencyVerified is locked — only admin/Cloud Function may change it.
+    // NOTE: the old rule referenced a non-existent 'isDriver' field; that has
+    // been removed. Role changes are admin-only (see second allow update).
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
       allow create: if isOwner(uid);
+      // Users may update their own profile, but cannot self-elevate their
+      // residency verification flag or role.
       allow update: if isOwner(uid) &&
         request.resource.data.isResidencyVerified == resource.data.isResidencyVerified &&
-        request.resource.data.isDriver == resource.data.isDriver;
+        request.resource.data.role == resource.data.role;
       allow update: if isAdmin();
     }
 
@@ -56,7 +60,7 @@ service cloud.firestore {
 
     // ── Vouches ───────────────────────────────────────────────────────────────
     match /vouches/{voucherId} {
-      allow read: if isSignedIn();
+      allow read: if isSignedIn() || isAdmin();
       allow create: if isSignedIn() &&
         request.resource.data.voucherUid == request.auth.uid;
     }
@@ -107,11 +111,16 @@ service cloud.firestore {
          isVendorOwner(resource.data.vendorId) ||
          isAdmin());
 
-      // Driver or vendor can update status; admin can do anything
+      // Driver or vendor can update status; admin can do anything.
+      // Customer may also cancel their own pending order (status -> 6).
       allow update: if isSignedIn() &&
         (resource.data.driverId == request.auth.uid ||
          isVendorOwner(resource.data.vendorId) ||
-         isAdmin());
+         isAdmin() ||
+         // Customer cancellation: only allowed while still pending (status==0)
+         (resource.data.customerId == request.auth.uid &&
+          resource.data.status == 0 &&
+          request.resource.data.status == 6));
     }
 
     // ── Rides ─────────────────────────────────────────────────────────────────
@@ -124,8 +133,16 @@ service cloud.firestore {
          resource.data.driverId == request.auth.uid ||
          isAdmin());
 
+      // Driver assigned to the ride can update status.
+      // Admin can always intervene.
+      // Customer may cancel their own pending ride (driverId is null at that point).
       allow update: if isSignedIn() &&
-        (resource.data.driverId == request.auth.uid || isAdmin());
+        (resource.data.driverId == request.auth.uid ||
+         isAdmin() ||
+         // Customer cancellation: only while pending (status==0) and not yet assigned
+         (resource.data.customerId == request.auth.uid &&
+          resource.data.status == 0 &&
+          request.resource.data.status == 6));
     }
 
     // ── FCM tokens ────────────────────────────────────────────────────────────

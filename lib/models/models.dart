@@ -398,8 +398,36 @@ class KgoroOrder {
         dropoffLng: (map['dropoffLng'] as num?)?.toDouble() ?? 0,
         driverId: map['driverId'],
         status: OrderStatus.values[map['status'] ?? 0],
-        createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
+        createdAt: _parseTimestamp(map['createdAt']),
       );
+
+  /// Handles both Firestore Timestamp objects and ISO-8601 strings.
+  static DateTime _parseTimestamp(dynamic value) {
+    if (value == null) return DateTime.now();
+    // Firestore Timestamp returned by SDK has a .toDate() method
+    if (value is DateTime) return value;
+    try {
+      // ignore: avoid_dynamic_calls
+      return (value as dynamic).toDate() as DateTime;
+    } catch (_) {}
+    return DateTime.tryParse(value.toString()) ?? DateTime.now();
+  }
+
+  Map<String, dynamic> toMap() => {
+        'customerId': customerId,
+        'type': type.index,
+        'vendorId': vendorId,
+        'items': items,
+        'subtotal': subtotal,
+        'deliveryFee': deliveryFee,
+        'total': total,
+        'dropoffArea': dropoffArea,
+        'dropoffLat': dropoffLat,
+        'dropoffLng': dropoffLng,
+        'driverId': driverId,
+        'status': status.index,
+        'createdAt': createdAt.toIso8601String(),
+      };
 }
 
 class RideRequest {
@@ -443,6 +471,31 @@ class RideRequest {
         estimatedFare: (map['estimatedFare'] as num?)?.toDouble() ?? 0,
         driverId: map['driverId'],
         status: OrderStatus.values[map['status'] ?? 0],
-        createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
+        createdAt: _parseTimestamp(map['createdAt']),
       );
+
+  /// Handles both Firestore Timestamp objects and ISO-8601 strings.
+  static DateTime _parseTimestamp(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is DateTime) return value;
+    try {
+      // ignore: avoid_dynamic_calls
+      return (value as dynamic).toDate() as DateTime;
+    } catch (_) {}
+    return DateTime.tryParse(value.toString()) ?? DateTime.now();
+  }
+
+  Map<String, dynamic> toMap() => {
+        'customerId': customerId,
+        'pickupLat': pickupLat,
+        'pickupLng': pickupLng,
+        'pickupArea': pickupArea,
+        'dropoffLat': dropoffLat,
+        'dropoffLng': dropoffLng,
+        'dropoffArea': dropoffArea,
+        'estimatedFare': estimatedFare,
+        'driverId': driverId,
+        'status': status.index,
+        'createdAt': createdAt.toIso8601String(),
+      };
 }

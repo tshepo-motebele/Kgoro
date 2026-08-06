@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants.dart';
@@ -23,14 +22,14 @@ class OrdersScreen extends ConsumerWidget {
               title: 'Sign in to see your orders',
               subtitle: 'Your delivery and ride history will appear here.',
             )
-          : StreamBuilder<QuerySnapshot>(
+          : StreamBuilder<List<KgoroOrder>>(
               stream: ref.read(firestoreServiceProvider).watchCustomerOrders(user.id),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const KgoroLoader();
                 }
-                final docs = snapshot.data?.docs ?? [];
-                if (docs.isEmpty) {
+                final orders = snapshot.data ?? [];
+                if (orders.isEmpty) {
                   return const EmptyState(
                     icon: Icons.receipt_long_outlined,
                     title: 'No orders yet',
@@ -39,12 +38,10 @@ class OrdersScreen extends ConsumerWidget {
                 }
                 return ListView.separated(
                   padding: const EdgeInsets.all(16),
-                  itemCount: docs.length,
+                  itemCount: orders.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 10),
                   itemBuilder: (context, i) {
-                    final doc = docs[i];
-                    final order = KgoroOrder.fromMap(doc.id, doc.data() as Map<String, dynamic>);
-                    
+                    final order = orders[i];
                     return Card(
                       child: ListTile(
                         leading: CircleAvatar(

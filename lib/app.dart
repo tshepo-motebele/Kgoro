@@ -8,6 +8,7 @@ import 'services/notification_service.dart';
 import 'screens/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/complete_profile_screen.dart';
 import 'screens/home_shell.dart';
 import 'screens/driver/driver_dashboard_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
@@ -150,10 +151,24 @@ class _RoleGateState extends ConsumerState<_RoleGate> {
   @override
   Widget build(BuildContext context) {
     final appUserAsync = ref.watch(currentAppUserProvider);
+    final authAsync = ref.watch(authStateProvider);
 
     return appUserAsync.when(
       data: (appUser) {
-        if (appUser == null) return const Scaffold(body: KgoroLoader());
+        // Race condition fix: immediately after sign-up the Firestore user doc
+        // may not exist yet (Cloud Firestore write hasn't propagated). In this
+        // case, send the user to CompleteProfileScreen so they can create their
+        // profile rather than spinning forever on a loader.
+        if (appUser == null) {
+          final firebaseUser = authAsync.valueOrNull;
+          if (firebaseUser != null) {
+            return CompleteProfileScreen(
+              uid: firebaseUser.uid,
+              phone: firebaseUser.phoneNumber ?? firebaseUser.email ?? '',
+            );
+          }
+          return const Scaffold(body: KgoroLoader());
+        }
 
         switch (appUser.role) {
           case UserRole.admin:
@@ -167,8 +182,22 @@ class _RoleGateState extends ConsumerState<_RoleGate> {
         }
       },
       loading: () => const Scaffold(body: KgoroLoader()),
-      error:   (_, __) => const Scaffold(
-        body: Center(child: Text('Error loading profile data.')),
+      error: (err, _) => Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, size: 48, color: Colors.red),
+              const SizedBox(height: 16),
+              const Text('Error loading profile data.'),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => ref.invalidate(currentAppUserProvider),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

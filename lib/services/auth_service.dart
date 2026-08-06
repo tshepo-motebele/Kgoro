@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'firestore_service.dart';
 
 /// Thin wrapper around FirebaseAuth. Phone OTP is the primary sign-in
 /// method (matches how most people in Thaba Nchu will have a mobile
@@ -10,27 +12,46 @@ import 'package:firebase_auth/firebase_auth.dart';
 /// silent reCAPTCHA verification. See README "Firebase & keys setup".
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirestoreService _firestore = FirestoreService();
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
 
+  /// Sends a phone OTP. Uses a [Completer] so that top-level network
+  /// errors (thrown before any callback fires) are propagated to the
+  /// caller instead of being silently swallowed.
   Future<void> sendOtp({
     required String phoneNumber,
     required void Function(String verificationId) onCodeSent,
     required void Function(FirebaseAuthException e) onFailed,
     required void Function(UserCredential credential) onAutoVerified,
-  }) async {
-    await _auth.verifyPhoneNumber(
+  }) {
+    final completer = Completer<void>();
+
+    _auth.verifyPhoneNumber(
       phoneNumber: phoneNumber,
       verificationCompleted: (credential) async {
-        final result = await _auth.signInWithCredential(credential);
-        onAutoVerified(result);
+        try {
+          final result = await _auth.signInWithCredential(credential);
+          onAutoVerified(result);
+          if (!completer.isCompleted) completer.complete();
+        } catch (e) {
+          if (!completer.isCompleted) completer.completeError(e);
+        }
       },
-      verificationFailed: onFailed,
-      codeSent: (verificationId, resendToken) => onCodeSent(verificationId),
+      verificationFailed: (e) {
+        onFailed(e);
+        if (!completer.isCompleted) completer.completeError(e);
+      },
+      codeSent: (verificationId, resendToken) {
+        onCodeSent(verificationId);
+        if (!completer.isCompleted) completer.complete();
+      },
       codeAutoRetrievalTimeout: (verificationId) {},
       timeout: const Duration(seconds: 60),
     );
+
+    return completer.future;
   }
 
   Future<UserCredential> confirmOtp({
@@ -53,5 +74,16 @@ class AuthService {
         email: email, password: password);
   }
 
+  /// Signs out the current user, deleting their FCM token first so no
+  /// further push notifications are routed to this device.
+  Future<void> signOutAndCleanup() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid != null) {
+      await _firestore.deleteToken(uid);
+    }
+    await _auth.signOut();
+  }
+
+  /// Legacy sign-out without cleanup — prefer [signOutAndCleanup] in UI.
   Future<void> signOut() => _auth.signOut();
 }
