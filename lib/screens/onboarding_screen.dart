@@ -9,40 +9,42 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> with TickerProviderStateMixin {
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with TickerProviderStateMixin {
   final _controller = PageController();
   late AnimationController _iconController;
   late Animation<double> _iconScale;
+  late Animation<double> _iconFade;
   int _page = 0;
 
-  final _slides = const [
+  static const _slides = [
     _SlideData(
       icon: Icons.storefront_rounded,
-      color: Color(0xFF0052CC),
+      accent: Color(0xFF198754),
       title: 'Groceries, Food & Rides',
-      body: 'Everything you need from local Thaba Nchu shops and kitchens — delivered to your door.',
-      badge: '🛒',
+      body:
+          'Everything you need from local Thaba Nchu shops and kitchens — delivered to your door.',
     ),
     _SlideData(
       icon: Icons.local_bar_rounded,
-      color: Color(0xFF6B3FA0),
+      accent: Color(0xFF6B3FA0),
       title: 'Liquor Delivered Responsibly',
-      body: 'Order your favourite drinks from local licensed liquor stores. You must be 18+ and will be age-verified at delivery.',
-      badge: '🍺',
+      body:
+          'Order your favourite drinks from local licensed stores. You must be 18+ and will be age-verified at delivery.',
     ),
     _SlideData(
       icon: Icons.local_taxi_rounded,
-      color: Color(0xFFFF991F),
+      accent: Color(0xFFB9681E),
       title: 'Rides Around Town',
-      body: 'Need to get somewhere? Book a cab from verified local drivers in Thaba Nchu, fast and fair.',
-      badge: '🚕',
+      body:
+          'Need to get somewhere? Book a cab from verified local drivers in Thaba Nchu — fast and fair.',
     ),
     _SlideData(
       icon: Icons.handshake_rounded,
-      color: Color(0xFF00875A),
+      accent: AppColors.mountain,
       title: 'Earn with Kgoro',
-      body: 'No experience needed. Walk, cycle, or drive. Our fair-match system spreads jobs across all drivers equally.',
-      badge: '💰',
+      body:
+          'No experience needed. Walk, cycle, or drive. Our fair-match system spreads jobs across all drivers equally.',
     ),
   ];
 
@@ -51,9 +53,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
     super.initState();
     _iconController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 550),
     );
-    _iconScale = CurvedAnimation(parent: _iconController, curve: Curves.elasticOut);
+    _iconScale = CurvedAnimation(parent: _iconController, curve: Curves.easeOutBack);
+    _iconFade = CurvedAnimation(parent: _iconController, curve: Curves.easeIn);
     _iconController.forward();
   }
 
@@ -70,40 +73,79 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
     _iconController.forward();
   }
 
+  void _next() {
+    if (_page == _slides.length - 1) {
+      widget.onDone();
+    } else {
+      _controller.nextPage(
+        duration: const Duration(milliseconds: 350),
+        curve: Curves.easeOutCubic,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final slide = _slides[_page];
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
+            // ── Top bar ──────────────────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 16, 0),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
+                  // Brand mark
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.mountain.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(12),
+                        width: 34,
+                        height: 34,
+                        decoration: const BoxDecoration(
+                          color: AppColors.mountainTint,
+                          shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.rocket_launch_rounded, color: AppColors.mountain, size: 20),
+                        child: const Icon(Icons.terrain_rounded,
+                            color: AppColors.mountain, size: 18),
                       ),
                       const SizedBox(width: 8),
-                      const Text('Kgoro', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppColors.mountain, letterSpacing: -0.5)),
+                      const Text(
+                        'Kgoro',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 18,
+                          color: AppColors.mountain,
+                          letterSpacing: -0.4,
+                        ),
+                      ),
                     ],
                   ),
-                  TextButton(
-                    onPressed: widget.onDone,
-                    child: const Text('Skip', style: TextStyle(color: Colors.grey)),
+                  // Skip — quiet but tappable
+                  GestureDetector(
+                    onTap: widget.onDone,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: AppColors.mountainTint,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: const Text(
+                        'Skip',
+                        style: TextStyle(
+                          color: AppColors.mountain,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
+
+            // ── Slides ───────────────────────────────────────────────────
             Expanded(
               child: PageView.builder(
                 controller: _controller,
@@ -112,51 +154,72 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
                 itemBuilder: (context, i) => _SlideView(
                   data: _slides[i],
                   iconScale: _iconScale,
+                  iconFade: _iconFade,
                   isCurrent: i == _page,
                 ),
               ),
             ),
-            // Dots
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _slides.length,
-                (i) => AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _page == i ? 28 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _page == i ? slide.color : Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(20),
+
+            // ── Dots + counter ───────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ...List.generate(_slides.length, (i) {
+                    final active = _page == i;
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: active ? 28 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: active ? AppColors.mountain : AppColors.line,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    );
+                  }),
+                  const SizedBox(width: 14),
+                  Text(
+                    '${_page + 1} of ${_slides.length}',
+                    style: const TextStyle(
+                      color: AppColors.muted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── CTA button ───────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _next,
+                  child: Text(
+                    _page == _slides.length - 1 ? 'Get started' : 'Continue',
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
                   ),
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: slide.color,
-                  minimumSize: const Size.fromHeight(56),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                ),
-                onPressed: () {
-                  if (_page == _slides.length - 1) {
-                    widget.onDone();
-                  } else {
-                    _controller.nextPage(
-                      duration: const Duration(milliseconds: 350),
-                      curve: Curves.easeOutCubic,
-                    );
-                  }
-                },
+
+            // Trust line on last slide
+            if (_page == _slides.length - 1)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 20),
                 child: Text(
-                  _page == _slides.length - 1 ? "Let's get started!" : 'Next',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 16),
+                  'Built for local customers, stores, and drivers.',
+                  style: TextStyle(
+                    color: AppColors.muted,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
-            ),
           ],
         ),
       ),
@@ -164,26 +227,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> with TickerProvider
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 class _SlideData {
   final IconData icon;
-  final Color color;
+  final Color accent;
   final String title;
   final String body;
-  final String badge;
+
   const _SlideData({
     required this.icon,
-    required this.color,
+    required this.accent,
     required this.title,
     required this.body,
-    required this.badge,
   });
 }
 
 class _SlideView extends StatelessWidget {
   final _SlideData data;
   final Animation<double> iconScale;
+  final Animation<double> iconFade;
   final bool isCurrent;
-  const _SlideView({required this.data, required this.iconScale, required this.isCurrent});
+
+  const _SlideView({
+    required this.data,
+    required this.iconScale,
+    required this.iconFade,
+    required this.isCurrent,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -192,38 +263,54 @@ class _SlideView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          ScaleTransition(
-            scale: iconScale,
-            child: Container(
-              width: 160,
-              height: 160,
-              decoration: BoxDecoration(
-                color: data.color.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Icon(data.icon, size: 72, color: data.color),
-                    Positioned(
-                      top: 16,
-                      right: 16,
-                      child: Text(data.badge, style: const TextStyle(fontSize: 28)),
-                    ),
-                  ],
+          // Icon — scale + fade, no emoji
+          FadeTransition(
+            opacity: iconFade,
+            child: ScaleTransition(
+              scale: iconScale,
+              child: Container(
+                width: 160,
+                height: 160,
+                decoration: BoxDecoration(
+                  color: data.accent.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: data.accent.withValues(alpha: 0.15),
+                    width: 2,
+                  ),
                 ),
+                child: Icon(data.icon, size: 76, color: data.accent),
               ),
             ),
           ),
-          const SizedBox(height: 36),
-          Text(data.title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, height: 1.2, letterSpacing: -0.5)),
+
+          const SizedBox(height: 40),
+
+          // Title
+          Text(
+            data.title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              height: 1.2,
+              letterSpacing: -0.5,
+              color: AppColors.ink,
+            ),
+          ),
+
           const SizedBox(height: 14),
-          Text(data.body,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 15, color: Colors.grey.shade600, height: 1.5)),
+
+          // Body
+          Text(
+            data.body,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 15,
+              color: AppColors.muted,
+              height: 1.55,
+            ),
+          ),
         ],
       ),
     );

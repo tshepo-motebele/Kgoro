@@ -103,7 +103,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: _selectedArea,
+              initialValue: _selectedArea,
               decoration: const InputDecoration(
                 labelText: 'Local Area',
                 prefixIcon: Icon(Icons.location_on_rounded),

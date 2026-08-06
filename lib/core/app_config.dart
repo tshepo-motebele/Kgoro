@@ -1,15 +1,24 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Central accessor for all environment variables loaded from .env
-/// Usage: AppConfig.googleMapsKey
+///
+/// Usage examples:
+///   AppConfig.googleMapsKey       → Maps API key for flutter_google_maps
+///   AppConfig.payfastMerchantId   → PayFast merchant credentials
+///   AppConfig.supportWhatsApp     → Support WhatsApp number
+///
+/// Firebase keys are consumed directly in firebase_options.dart and
+/// do not need to be accessed via this class.
 class AppConfig {
   AppConfig._();
 
-  // ── Google Maps ─────────────────────────────────────────────────────────────
+  // ── Google Maps ──────────────────────────────────────────────────────────────
+  /// API key used by flutter_google_maps / google_maps_flutter in Dart code.
+  /// The Android manifest key is set separately via android/local.properties.
   static String get googleMapsKey =>
       dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
 
-  // ── PayFast (South Africa) ──────────────────────────────────────────────────
+  // ── PayFast (South Africa) ───────────────────────────────────────────────────
   static String get payfastMerchantId =>
       dotenv.env['PAYFAST_MERCHANT_ID'] ?? '';
   static String get payfastMerchantKey =>

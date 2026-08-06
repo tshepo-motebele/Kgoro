@@ -17,33 +17,42 @@ class HomeDashboardScreen extends ConsumerWidget {
     final userAsync = ref.watch(currentAppUserProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Hero gradient header
+          // ── Hero header ───────────────────────────────────────────────
           userAsync.when(
-            data: (user) => HeroGradientHeader(
-              greeting: 'Dumela, ${user?.fullName.split(' ').first ?? 'friend'} 👋',
-              subtitle: user?.localArea ?? 'Thaba Nchu',
-              trailing: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: Text(
-                    (user?.fullName.isNotEmpty == true)
-                        ? user!.fullName[0].toUpperCase()
-                        : 'K',
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18),
+            data: (user) {
+              final firstName = user?.fullName.split(' ').first ?? 'friend';
+              final area = user?.localArea ?? 'Thaba Nchu';
+              return HeroGradientHeader(
+                greeting: 'Dumela, $firstName',
+                subtitle: area,
+                trailing: Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.35), width: 1.5),
+                  ),
+                  child: Center(
+                    child: Text(
+                      (user?.fullName.isNotEmpty == true)
+                          ? user!.fullName[0].toUpperCase()
+                          : 'K',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
+              );
+            },
             loading: () => const HeroGradientHeader(
               greeting: 'Welcome to Kgoro',
               subtitle: 'Thaba Nchu',
@@ -53,18 +62,19 @@ class HomeDashboardScreen extends ConsumerWidget {
               subtitle: 'Thaba Nchu',
             ),
           ),
-          // Body
+
+          // ── Body ──────────────────────────────────────────────────────
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
-              children: [
-                const SectionHeader(title: 'Our Services'),
-                const _ServiceGrid(),
-                const SectionHeader(title: 'Earn with Kgoro'),
-                const _EarnCard(),
-                const SectionHeader(title: 'Why Kgoro?'),
-                const _AboutCard(),
-                const SizedBox(height: 16),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+              children: const [
+                SectionHeader(title: 'Our Services'),
+                _ServiceGrid(),
+                SectionHeader(title: 'Earn with Kgoro'),
+                _EarnCard(),
+                SectionHeader(title: 'Why Kgoro?'),
+                _TrustBlock(),
+                SizedBox(height: 16),
               ],
             ),
           ),
@@ -86,28 +96,28 @@ class _ServiceGrid extends StatelessWidget {
         title: 'Groceries',
         subtitle: 'Local shops',
         icon: Icons.local_grocery_store_rounded,
-        color: const Color(0xFF00875A),
+        color: AppColors.groceries,
         onTap: () => Navigator.of(context).push(_route(const GroceriesScreen())),
       ),
       _TileData(
         title: 'Food',
         subtitle: 'Kitchens & takeaways',
         icon: Icons.ramen_dining_rounded,
-        color: AppColors.mountain,
+        color: AppColors.food,
         onTap: () => Navigator.of(context).push(_route(const FoodScreen())),
       ),
       _TileData(
         title: 'Liquor',
         subtitle: '18+ only',
         icon: Icons.local_bar_rounded,
-        color: const Color(0xFF6B3FA0),
+        color: AppColors.liquor,
         onTap: () => Navigator.of(context).push(_route(const LiquorScreen())),
       ),
       _TileData(
         title: 'Cab',
         subtitle: 'Rides around town',
         icon: Icons.local_taxi_rounded,
-        color: const Color(0xFFFF991F),
+        color: AppColors.cab,
         onTap: () => Navigator.of(context).push(_route(const CabBookingScreen())),
       ),
     ];
@@ -118,7 +128,7 @@ class _ServiceGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 14,
       crossAxisSpacing: 14,
-      childAspectRatio: 1.15,
+      childAspectRatio: 1.1,
       children: List.generate(
         tiles.length,
         (i) => AnimatedServiceCard(
@@ -139,13 +149,15 @@ class _ServiceGrid extends StatelessWidget {
           return FadeTransition(
             opacity: animation,
             child: SlideTransition(
-              position: Tween<Offset>(begin: const Offset(0.05, 0), end: Offset.zero)
-                  .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+              position: Tween<Offset>(
+                      begin: const Offset(0.05, 0), end: Offset.zero)
+                  .animate(CurvedAnimation(
+                      parent: animation, curve: Curves.easeOutCubic)),
               child: child,
             ),
           );
         },
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionDuration: const Duration(milliseconds: 280),
       );
 }
 
@@ -176,16 +188,17 @@ class _EarnCard extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [AppColors.primary, AppColors.primaryLight],
+            colors: [Color(0xFF174A3A), Color(0xFF1F6B52)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(22),
           boxShadow: [
             BoxShadow(
-                color: AppColors.mountain.withValues(alpha: 0.4),
-                blurRadius: 20,
-                offset: const Offset(0, 8)),
+              color: AppColors.mountain.withValues(alpha: 0.35),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
           ],
         ),
         child: Row(
@@ -194,34 +207,59 @@ class _EarnCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Earn on your own terms',
-                      style: TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w900, fontSize: 17,
-                          letterSpacing: -0.5)),
-                  const SizedBox(height: 6),
+                  const Text(
+                    'Earn on your own terms',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
                   Text(
-                    'Walk, cycle or drive. Fair-match spreads jobs across all local drivers equally.',
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 13, height: 1.4),
+                    'Walk, cycle, or drive. Fair-match spreads jobs across all local drivers equally.',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.82),
+                      fontSize: 13,
+                      height: 1.45,
+                    ),
                   ),
                   const SizedBox(height: 14),
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Colors.white, width: 1.5),
-                      minimumSize: const Size(0, 40),
+                      minimumSize: const Size(0, 38),
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
                     ),
-                    icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                    label: const Text('Apply now', style: TextStyle(fontWeight: FontWeight.w700)),
+                    icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                    label: const Text('Apply now',
+                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const BecomeDriverIntroScreen()),
+                      MaterialPageRoute(
+                          builder: (_) => const BecomeDriverIntroScreen()),
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(width: 12),
-            const Icon(Icons.directions_bike_rounded, color: Colors.white, size: 56),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.directions_bike_rounded,
+                color: Colors.white,
+                size: 40,
+              ),
+            ),
           ],
         ),
       ),
@@ -229,10 +267,10 @@ class _EarnCard extends StatelessWidget {
   }
 }
 
-// ─── About Card ───────────────────────────────────────────────────────────────
+// ─── Trust Block ──────────────────────────────────────────────────────────────
 
-class _AboutCard extends StatelessWidget {
-  const _AboutCard();
+class _TrustBlock extends StatelessWidget {
+  const _TrustBlock();
 
   @override
   Widget build(BuildContext context) {
@@ -241,34 +279,42 @@ class _AboutCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFFEBECF0)),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppColors.line),
           boxShadow: [
             BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 4)),
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
-        child: Column(
-          children: const [
-            _AboutPoint(
+        child: const Column(
+          children: [
+            _TrustRow(
               icon: Icons.verified_user_rounded,
-              color: Color(0xFF0052CC),
-              text: 'Every customer, vendor and driver is verified as a Thaba Nchu resident.',
+              color: AppColors.mountain,
+              text:
+                  'Every customer, vendor, and driver is verified as a Thaba Nchu resident.',
             ),
-            SizedBox(height: 14),
-            _AboutPoint(
+            SizedBox(height: 16),
+            Divider(height: 1),
+            SizedBox(height: 16),
+            _TrustRow(
               icon: Icons.balance_rounded,
-              color: Color(0xFF00875A),
-              text: 'Fair-match technology spreads delivery jobs across all drivers — not just the busiest few.',
+              color: AppColors.veld,
+              text:
+                  'Fair-match technology spreads jobs across all drivers — not just the busiest few.',
             ),
-            SizedBox(height: 14),
-            _AboutPoint(
+            SizedBox(height: 16),
+            Divider(height: 1),
+            SizedBox(height: 16),
+            _TrustRow(
               icon: Icons.trending_up_rounded,
-              color: Color(0xFFFF991F),
-              text: 'Surge pricing is capped at 1.3× so deliveries stay affordable during busy times.',
+              color: AppColors.naledi,
+              text:
+                  'Surge pricing is capped at 1.3× so deliveries stay affordable during busy times.',
             ),
           ],
         ),
@@ -277,11 +323,11 @@ class _AboutCard extends StatelessWidget {
   }
 }
 
-class _AboutPoint extends StatelessWidget {
+class _TrustRow extends StatelessWidget {
   final IconData icon;
   final Color color;
   final String text;
-  const _AboutPoint({required this.icon, required this.color, required this.text});
+  const _TrustRow({required this.icon, required this.color, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -289,17 +335,28 @@ class _AboutPoint extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(8),
+          width: 38,
+          height: 38,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
+            color: color.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, size: 18, color: color),
+          child: Icon(icon, size: 19, color: color),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 14),
         Expanded(
-          child: Text(text,
-              style: const TextStyle(fontSize: 13.5, height: 1.45, fontWeight: FontWeight.w500)),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 13.5,
+                height: 1.5,
+                fontWeight: FontWeight.w500,
+                color: AppColors.ink,
+              ),
+            ),
+          ),
         ),
       ],
     );

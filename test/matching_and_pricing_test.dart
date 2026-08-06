@@ -58,7 +58,7 @@ void main() {
     });
 
     test('rejects clearly invalid checksum', () {
-      expect(Validators.isValidSAId('0000000000000'.substring(0, 12) + '1'),
+      expect(Validators.isValidSAId('${'0000000000000'.substring(0, 12)}1'),
           isFalse);
     });
 

@@ -199,7 +199,7 @@ class _VendorOnboardingScreenState
                       : const Text('Submit Application'),
                 ),
                 const SizedBox(height: 16),
-                Center(
+                const Center(
                   child: Text(
                     'Your store will be reviewed by our team. You\'ll '
                     'get access as soon as it\'s approved.',

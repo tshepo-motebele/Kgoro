@@ -257,36 +257,39 @@ class _PendingApprovalScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.all(24),
+                width: 96,
+                height: 96,
                 decoration: const BoxDecoration(
-                  color: AppColors.surfaceTint,
+                  color: AppColors.mountainTint,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.hourglass_top_rounded,
-                    color: AppColors.primary, size: 64),
+                    color: AppColors.mountain, size: 48),
               ),
-              const SizedBox(height: 32),
-              Text(storeName,
-                  style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primaryDark),
-                  textAlign: TextAlign.center),
+              const SizedBox(height: 28),
+              Text(
+                storeName,
+                style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.ink),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 12),
               const Text(
                 'Your store application is under review.',
                 style: TextStyle(
-                    fontSize: 18,
+                    fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.primaryDark),
+                    color: AppColors.ink),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              Text(
+              const Text(
                 'Our team will review your details and approve your store '
-                'as soon as possible. You\'ll be notified when approved.',
+                'as soon as possible. You will be notified when approved.',
                 style: TextStyle(
-                    color: AppColors.textMuted, fontSize: 15, height: 1.6),
+                    color: AppColors.muted, fontSize: 14.5, height: 1.6),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -311,26 +314,39 @@ class _RejectedScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.cancel_rounded, color: AppColors.error, size: 80),
-              const SizedBox(height: 24),
-              Text(storeName,
-                  style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primaryDark),
-                  textAlign: TextAlign.center),
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  color: AppColors.error.withValues(alpha: 0.08),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.cancel_rounded,
+                    color: AppColors.error, size: 48),
+              ),
+              const SizedBox(height: 28),
+              Text(
+                storeName,
+                style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.ink),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 12),
-              const Text('Application not approved',
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.error),
-                  textAlign: TextAlign.center),
+              const Text(
+                'Application not approved',
+                style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.error),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 16),
               const Text(
                 'Please contact Kgoro support for details on next steps.',
                 style: TextStyle(
-                    color: AppColors.textMuted, fontSize: 15, height: 1.6),
+                    color: AppColors.muted, fontSize: 14.5, height: 1.6),
                 textAlign: TextAlign.center,
               ),
             ],

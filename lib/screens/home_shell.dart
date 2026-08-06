@@ -20,16 +20,19 @@ class HomeShell extends ConsumerWidget {
 
     return Scaffold(
       body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 220),
         child: IndexedStack(key: ValueKey(tab), index: tab, children: screens),
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surface,
+          border: const Border(
+            top: BorderSide(color: AppColors.line, width: 1),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 20,
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 16,
               offset: const Offset(0, -4),
             ),
           ],
@@ -38,8 +41,8 @@ class HomeShell extends ConsumerWidget {
           selectedIndex: tab,
           onDestinationSelected: (i) =>
               ref.read(selectedServiceTabProvider.notifier).state = i,
-          backgroundColor: Colors.white,
-          indicatorColor: AppColors.mountain.withValues(alpha: 0.1),
+          backgroundColor: AppColors.surface,
+          indicatorColor: AppColors.mountainTint,
           labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           destinations: const [
             NavigationDestination(
@@ -49,12 +52,14 @@ class HomeShell extends ConsumerWidget {
             ),
             NavigationDestination(
               icon: Icon(Icons.receipt_long_outlined),
-              selectedIcon: Icon(Icons.receipt_long_rounded, color: AppColors.mountain),
+              selectedIcon:
+                  Icon(Icons.receipt_long_rounded, color: AppColors.mountain),
               label: 'Orders',
             ),
             NavigationDestination(
               icon: Icon(Icons.person_outline_rounded),
-              selectedIcon: Icon(Icons.person_rounded, color: AppColors.mountain),
+              selectedIcon:
+                  Icon(Icons.person_rounded, color: AppColors.mountain),
               label: 'Profile',
             ),
           ],

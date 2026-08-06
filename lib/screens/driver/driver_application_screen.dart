@@ -46,7 +46,9 @@ class _DriverApplicationScreenState
       permission = await Geolocator.requestPermission();
     }
     if (permission == LocationPermission.deniedForever ||
-        permission == LocationPermission.denied) return;
+        permission == LocationPermission.denied) {
+      return;
+    }
     final pos = await Geolocator.getCurrentPosition();
     setState(() => _position = pos);
   }

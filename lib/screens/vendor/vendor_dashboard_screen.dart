@@ -718,9 +718,9 @@ class _SettingsTabState extends ConsumerState<_SettingsTab> {
                         child: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 20),
                       ),
                     )
-                  : Column(
+                  : const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
+                      children: [
                         Icon(Icons.add_a_photo_rounded,
                             color: AppColors.primary, size: 40),
                         SizedBox(height: 8),

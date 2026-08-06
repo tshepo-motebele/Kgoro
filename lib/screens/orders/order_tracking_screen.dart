@@ -266,12 +266,12 @@ class _DriverCard extends ConsumerWidget {
 
         return Card(
           child: ListTile(
-            leading: CircleAvatar(
+            leading: const CircleAvatar(
               backgroundColor: AppColors.surfaceTint,
-              child: const Icon(Icons.person_rounded, color: AppColors.primary),
+              child: Icon(Icons.person_rounded, color: AppColors.primary),
             ),
-            title: Text('Your driver',
-                style: const TextStyle(fontWeight: FontWeight.w700)),
+            title: const Text('Your driver',
+                style: TextStyle(fontWeight: FontWeight.w700)),
             subtitle: Text(
                 '$vehicle · ★ ${rating.toStringAsFixed(1)} · $jobs deliveries',
                 style: const TextStyle(fontSize: 13)),
