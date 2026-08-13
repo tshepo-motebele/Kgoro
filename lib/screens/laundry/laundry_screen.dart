@@ -6,18 +6,18 @@ import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../widgets/common_widgets.dart';
-import 'vendor_detail_screen.dart';
+import '../groceries/vendor_detail_screen.dart';
 
-class GroceriesScreen extends ConsumerWidget {
-  const GroceriesScreen({super.key});
+class LaundryScreen extends ConsumerWidget {
+  const LaundryScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final vendorsStream =
-        ref.watch(firestoreServiceProvider).watchVendorsByType(ServiceType.groceries);
+        ref.watch(firestoreServiceProvider).watchVendorsByType(ServiceType.laundry);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Groceries')),
+      appBar: AppBar(title: const Text('Laundry')),
       body: StreamBuilder<List<Vendor>>(
         stream: vendorsStream,
         builder: (context, snapshot) {
@@ -27,10 +27,10 @@ class GroceriesScreen extends ConsumerWidget {
           final vendors = snapshot.data ?? [];
           if (vendors.isEmpty) {
             return const EmptyState(
-              icon: Icons.local_grocery_store_outlined,
-              title: 'No grocery shops yet',
+              icon: Icons.local_laundry_service_outlined,
+              title: 'No laundry services yet',
               subtitle:
-                  'Local shops in Thaba Nchu are being onboarded. Check back soon, or ask your favourite shop to sign up.',
+                  'Local laundry shops in Thaba Nchu are being onboarded. Check back soon.',
               lottieUrl: 'https://assets9.lottiefiles.com/packages/lf20_x62chj8y.json',
             );
           }
@@ -68,7 +68,7 @@ class _VendorCard extends StatelessWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.veld.withValues(alpha: 0.12),
+                    color: AppColors.laundry.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),
                     image: vendor.imageUrl.isNotEmpty
                         ? DecorationImage(
@@ -78,7 +78,7 @@ class _VendorCard extends StatelessWidget {
                         : null,
                   ),
                   child: vendor.imageUrl.isEmpty
-                      ? const Icon(Icons.storefront_rounded, color: AppColors.veld)
+                      ? const Icon(Icons.local_laundry_service_rounded, color: AppColors.laundry)
                       : null,
                 ),
               ),

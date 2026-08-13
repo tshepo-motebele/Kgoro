@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
@@ -21,7 +22,7 @@ class VendorDetailScreen extends ConsumerWidget {
         stream: productsStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const KgoroLoader();
+            return const KgoroShimmerList();
           }
           final products = snapshot.data ?? [];
           if (products.isEmpty) {
@@ -29,6 +30,7 @@ class VendorDetailScreen extends ConsumerWidget {
               icon: Icons.inventory_2_outlined,
               title: 'No products listed',
               subtitle: 'This vendor has not added any products yet.',
+              lottieUrl: 'https://assets9.lottiefiles.com/packages/lf20_x62chj8y.json',
             );
           }
 
@@ -37,6 +39,27 @@ class VendorDetailScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              Hero(
+                tag: 'vendor_image_${vendor.id}',
+                child: Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.veld.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(16),
+                    image: vendor.imageUrl.isNotEmpty
+                        ? DecorationImage(
+                            image: CachedNetworkImageProvider(vendor.imageUrl),
+                            fit: BoxFit.cover,
+                          )
+                        : null,
+                  ),
+                  child: vendor.imageUrl.isEmpty
+                      ? const Icon(Icons.storefront_rounded, size: 48, color: AppColors.veld)
+                      : null,
+                ),
+              ),
+              const SizedBox(height: 20),
               for (final category in categories) ...[
                 SectionHeader(title: category.isNotEmpty ? category : 'Products'),
                 ...products

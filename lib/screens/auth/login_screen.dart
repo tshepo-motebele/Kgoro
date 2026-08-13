@@ -27,15 +27,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
                       ),
-                      child: Icon(
-                        Icons.rocket_launch_rounded,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 32,
+                      child: Image.asset(
+                        'assets/images/kgoro_logo_blue.png',
+                        width: 36,
+                        height: 36,
+                        fit: BoxFit.contain,
                       ),
                     ),
                     const SizedBox(width: 16),

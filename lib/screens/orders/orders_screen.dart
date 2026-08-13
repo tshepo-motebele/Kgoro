@@ -21,12 +21,13 @@ class OrdersScreen extends ConsumerWidget {
               icon: Icons.receipt_long_outlined,
               title: 'Sign in to see your orders',
               subtitle: 'Your delivery and ride history will appear here.',
+              lottieUrl: 'https://assets9.lottiefiles.com/packages/lf20_x62chj8y.json',
             )
           : StreamBuilder<List<KgoroOrder>>(
               stream: ref.read(firestoreServiceProvider).watchCustomerOrders(user.id),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const KgoroLoader();
+                  return const KgoroShimmerList();
                 }
                 final orders = snapshot.data ?? [];
                 if (orders.isEmpty) {
@@ -34,6 +35,7 @@ class OrdersScreen extends ConsumerWidget {
                     icon: Icons.receipt_long_outlined,
                     title: 'No orders yet',
                     subtitle: 'Once you order groceries, food, or a ride, it will show up here.',
+                    lottieUrl: 'https://assets9.lottiefiles.com/packages/lf20_x62chj8y.json',
                   );
                 }
                 return ListView.separated(

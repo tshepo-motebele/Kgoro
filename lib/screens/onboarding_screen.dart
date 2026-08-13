@@ -107,8 +107,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           color: AppColors.mountainTint,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.terrain_rounded,
-                            color: AppColors.mountain, size: 18),
+                        child: Image.asset('assets/images/kgoro_logo_blue.png'),
                       ),
                       const SizedBox(width: 8),
                       const Text(

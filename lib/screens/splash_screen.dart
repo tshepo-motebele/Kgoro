@@ -51,27 +51,26 @@ class _SplashScreenState extends State<SplashScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo mark — gold circle with mountain icon
+              // Logo mark
               ScaleTransition(
                 scale: _scale,
                 child: Container(
                   width: 104,
                   height: 104,
                   decoration: BoxDecoration(
-                    color: AppColors.naledi,
+                    color: Colors.white,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.naledi.withValues(alpha: 0.4),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 32,
                         offset: const Offset(0, 8),
                       ),
                     ],
-                  ),
-                  child: const Icon(
-                    Icons.terrain_rounded,
-                    color: AppColors.mountain,
-                    size: 52,
+                    image: const DecorationImage(
+                      image: AssetImage('assets/images/kgoro_logo_blue.png'),
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),

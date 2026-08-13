@@ -62,7 +62,7 @@ class AppConstants {
   static const double maxSurgeMultiplier = 1.3;
 }
 
-enum ServiceType { groceries, food, cab, liquor }
+enum ServiceType { groceries, food, cab, liquor, laundry }
 
 enum OrderStatus {
   pending,

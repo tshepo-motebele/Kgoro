@@ -123,7 +123,7 @@ class _LiquorScreenState extends ConsumerState<LiquorScreen> {
                     stream: vendorsStream,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const KgoroLoader();
+                        return const KgoroShimmerList();
                       }
                       final vendors = snapshot.data ?? [];
                       if (vendors.isEmpty) {
@@ -131,6 +131,7 @@ class _LiquorScreenState extends ConsumerState<LiquorScreen> {
                           icon: Icons.local_bar_outlined,
                           title: 'No liquor stores yet',
                           subtitle: 'Licensed liquor stores in Thaba Nchu are being onboarded. Check back soon!',
+                          lottieUrl: 'https://assets9.lottiefiles.com/packages/lf20_x62chj8y.json',
                         );
                       }
                       return ListView.separated(
@@ -263,23 +264,26 @@ class _LiquorVendorCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: const Color(0xFF6B3FA0).withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(14),
-                image: vendor.imageUrl.isNotEmpty
-                    ? DecorationImage(
-                        image: CachedNetworkImageProvider(vendor.imageUrl),
-                        fit: BoxFit.cover,
-                      )
+            Hero(
+              tag: 'vendor_image_${vendor.id}',
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF6B3FA0).withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                  image: vendor.imageUrl.isNotEmpty
+                      ? DecorationImage(
+                          image: CachedNetworkImageProvider(vendor.imageUrl),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: vendor.imageUrl.isEmpty
+                    ? const Icon(Icons.local_bar_rounded,
+                        color: Color(0xFF6B3FA0))
                     : null,
               ),
-              child: vendor.imageUrl.isEmpty
-                  ? const Icon(Icons.local_bar_rounded,
-                      color: Color(0xFF6B3FA0))
-                  : null,
             ),
             const SizedBox(width: 14),
             Expanded(

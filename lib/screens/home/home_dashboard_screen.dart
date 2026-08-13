@@ -7,6 +7,7 @@ import '../groceries/groceries_screen.dart';
 import '../food/food_screen.dart';
 import '../cab/cab_booking_screen.dart';
 import '../liquor/liquor_screen.dart';
+import '../laundry/laundry_screen.dart';
 import '../driver/become_driver_intro_screen.dart';
 
 class HomeDashboardScreen extends ConsumerWidget {
@@ -119,6 +120,13 @@ class _ServiceGrid extends StatelessWidget {
         icon: Icons.local_taxi_rounded,
         color: AppColors.cab,
         onTap: () => Navigator.of(context).push(_route(const CabBookingScreen())),
+      ),
+      _TileData(
+        title: 'Laundry',
+        subtitle: 'Wash & fold',
+        icon: Icons.local_laundry_service_rounded,
+        color: AppColors.laundry,
+        onTap: () => Navigator.of(context).push(_route(const LaundryScreen())),
       ),
     ];
 

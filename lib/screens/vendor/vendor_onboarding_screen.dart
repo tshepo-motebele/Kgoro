@@ -242,6 +242,7 @@ class _ServiceTypeSelector extends StatelessWidget {
       (ServiceType.groceries, Icons.shopping_basket_rounded, 'Groceries'),
       (ServiceType.food, Icons.fastfood_rounded, 'Fast Food'),
       (ServiceType.liquor, Icons.local_bar_rounded, 'Liquor'),
+      (ServiceType.laundry, Icons.local_laundry_service_rounded, 'Laundry'),
     ];
     return Row(
       children: options.map((opt) {

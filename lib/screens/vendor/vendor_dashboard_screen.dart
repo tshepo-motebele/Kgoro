@@ -55,7 +55,9 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
                   ? 'Groceries'
                   : widget.vendor.type == ServiceType.food
                       ? 'Fast Food'
-                      : 'Liquor',
+                      : widget.vendor.type == ServiceType.liquor
+                          ? 'Liquor'
+                          : 'Laundry',
               style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textMuted,

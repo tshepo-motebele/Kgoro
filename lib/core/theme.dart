@@ -7,35 +7,34 @@ import 'package:google_fonts/google_fonts.dart';
 
 abstract final class AppColors {
   // ── Primary brand ────────────────────────────────────────────────────────
-  /// Deep mountain green — primary actions, nav, identity.
-  static const Color mountain     = Color(0xFF174A3A);
-  /// Light green tint — selected states, chip backgrounds.
-  static const Color mountainTint = Color(0xFFE6F1EC);
+  /// Sky Blue — primary actions, buttons, active states
+  static const Color primary      = Color(0xFF1E6FDB);
+  /// Navy — headings, high-emphasis text
+  static const Color primaryDark  = Color(0xFF0D2C54);
+  /// Light Blue — secondary accents, chips
+  static const Color primaryLight = Color(0xFF569CF0);
 
   // ── Highlight ────────────────────────────────────────────────────────────
-  /// Warm gold — ratings, earnings, positive highlights.
+  /// Warm gold — ratings, earnings, positive highlights (kept for continuity)
   static const Color naledi       = Color(0xFFE0A72F);
 
   // ── Semantic ─────────────────────────────────────────────────────────────
-  /// Veld green — available / open / success states.
-  static const Color veld         = Color(0xFF198754);
-  /// Clay / amber — pending / warning states.
-  static const Color clay         = Color(0xFFC47724);
-  /// Error red.
-  static const Color error        = Color(0xFFB54747);
+  static const Color success      = Color(0xFF10B981); // Veld green replacement
+  static const Color warning      = Color(0xFFFF991F); // Clay / amber replacement
+  static const Color error        = Color(0xFFDE350B);
 
   // ── Surface & background ─────────────────────────────────────────────────
-  /// Warm off-white canvas — friendlier than pure white or cold grey.
-  static const Color background   = Color(0xFFF8F6F1);
+  /// Pure white canvas
+  static const Color background   = Color(0xFFFFFFFF);
   /// Raised surface (cards, sheets).
   static const Color surface      = Colors.white;
+  /// Very light blue — card/section tint
+  static const Color surfaceTint  = Color(0xFFEBF3FF);
 
   // ── Text ─────────────────────────────────────────────────────────────────
-  /// Primary text — very dark green, near-black.
-  static const Color ink          = Color(0xFF1C2B26);
-  /// Secondary / muted text.
-  static const Color muted        = Color(0xFF68756F);
-  /// Borders and dividers.
+  /// Primary text — Navy
+  static const Color ink          = Color(0xFF0D2C54);
+  static const Color muted        = Color(0xFF64748B);
   static const Color line         = Color(0xFFDDE5DF);
 
   // ── Category accents (icon backgrounds only) ─────────────────────────────
@@ -43,14 +42,13 @@ abstract final class AppColors {
   static const Color liquor       = Color(0xFF6B3FA0);
   static const Color cab          = Color(0xFFB9681E);
   static const Color groceries    = Color(0xFF198754);
+  static const Color laundry      = Color(0xFF3B82F6);
 
   // ── Legacy aliases — keep screens that reference old names compiling ──────
-  static const Color primary      = mountain;
-  static const Color primaryLight = Color(0xFF569CF0); // kept for gradient use
-  static const Color primaryDark  = Color(0xFF0D2C54);
-  static const Color success      = veld;
-  static const Color warning      = clay;
-  static const Color surfaceTint  = mountainTint;
+  static const Color mountain     = primary;
+  static const Color mountainTint = surfaceTint;
+  static const Color veld         = success;
+  static const Color clay         = warning;
   static const Color textMuted    = muted;
   static const Color night        = primaryDark;
 }

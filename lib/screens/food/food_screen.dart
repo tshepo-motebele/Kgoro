@@ -22,7 +22,7 @@ class FoodScreen extends ConsumerWidget {
         stream: vendorsStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const KgoroLoader();
+            return const KgoroShimmerList();
           }
           final vendors = snapshot.data ?? [];
           if (vendors.isEmpty) {
@@ -31,6 +31,7 @@ class FoodScreen extends ConsumerWidget {
               title: 'No kitchens yet',
               subtitle:
                   'Local kitchens and takeaways in Thaba Nchu are being onboarded. Check back soon!',
+              lottieUrl: 'https://assets9.lottiefiles.com/packages/lf20_x62chj8y.json',
             );
           }
           return ListView.separated(
@@ -49,22 +50,25 @@ class FoodScreen extends ConsumerWidget {
                     padding: const EdgeInsets.all(14),
                     child: Row(
                       children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: AppColors.mountain.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(14),
-                            image: v.imageUrl.isNotEmpty
-                                ? DecorationImage(
-                                    image: CachedNetworkImageProvider(v.imageUrl),
-                                    fit: BoxFit.cover,
-                                  )
+                        Hero(
+                          tag: 'vendor_image_${v.id}',
+                          child: Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: AppColors.mountain.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(14),
+                              image: v.imageUrl.isNotEmpty
+                                  ? DecorationImage(
+                                      image: CachedNetworkImageProvider(v.imageUrl),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: v.imageUrl.isEmpty
+                                ? const Icon(Icons.ramen_dining_rounded, color: AppColors.mountain)
                                 : null,
                           ),
-                          child: v.imageUrl.isEmpty
-                              ? const Icon(Icons.ramen_dining_rounded, color: AppColors.mountain)
-                              : null,
                         ),
                         const SizedBox(width: 14),
                         Expanded(

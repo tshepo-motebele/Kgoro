@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
+import 'package:shimmer/shimmer.dart';
 import '../core/theme.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -160,6 +162,7 @@ class KgoroEmptyState extends StatelessWidget {
   final String message;
   final String? actionLabel;
   final VoidCallback? onAction;
+  final String? lottieUrl;
 
   const KgoroEmptyState({
     super.key,
@@ -168,6 +171,7 @@ class KgoroEmptyState extends StatelessWidget {
     required this.message,
     this.actionLabel,
     this.onAction,
+    this.lottieUrl,
   });
 
   @override
@@ -178,15 +182,18 @@ class KgoroEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 76,
-              height: 76,
-              decoration: const BoxDecoration(
-                color: AppColors.mountainTint,
-                shape: BoxShape.circle,
+            if (lottieUrl != null)
+              Lottie.network(lottieUrl!, width: 140, height: 140, fit: BoxFit.contain)
+            else
+              Container(
+                width: 76,
+                height: 76,
+                decoration: const BoxDecoration(
+                  color: AppColors.mountainTint,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: AppColors.mountain, size: 36),
               ),
-              child: Icon(icon, color: AppColors.mountain, size: 36),
-            ),
             const SizedBox(height: 18),
             Text(
               title,
@@ -227,13 +234,15 @@ class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
   final String subtitle;
-  const EmptyState({super.key, required this.icon, required this.title, required this.subtitle});
+  final String? lottieUrl;
+  const EmptyState({super.key, required this.icon, required this.title, required this.subtitle, this.lottieUrl});
 
   @override
   Widget build(BuildContext context) => KgoroEmptyState(
         icon: icon,
         title: title,
         message: subtitle,
+        lottieUrl: lottieUrl,
       );
 }
 
@@ -771,4 +780,37 @@ class _StaggeredFadeSlideState extends State<StaggeredFadeSlide>
         opacity: _opacity,
         child: SlideTransition(position: _slide, child: widget.child),
       );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// KgoroShimmerList — used for lists of stores, orders, etc.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class KgoroShimmerList extends StatelessWidget {
+  final int itemCount;
+  const KgoroShimmerList({super.key, this.itemCount = 5});
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = isDark ? Colors.grey[800]! : Colors.grey[200]!;
+    final highlight = isDark ? Colors.grey[700]! : Colors.grey[50]!;
+
+    return Shimmer.fromColors(
+      baseColor: base,
+      highlightColor: highlight,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(20),
+        itemCount: itemCount,
+        separatorBuilder: (_, __) => const SizedBox(height: 16),
+        itemBuilder: (_, __) => Container(
+          height: 100,
+          decoration: BoxDecoration(
+            color: Colors.white, // Needs to be opaque for Shimmer to paint over
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+      ),
+    );
+  }
 }
