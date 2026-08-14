@@ -23,6 +23,12 @@ class FirestoreService {
       .doc(uid)
       .snapshots()
       .map((d) => d.exists ? AppUser.fromMap(d.id, d.data()!) : null);
+  Stream<List<AppUser>> watchAllUsers() => _db
+      .collection('users')
+      .snapshots()
+      .map((s) => s.docs.map((d) => AppUser.fromMap(d.id, d.data())).toList());
+
+  Future<void> deleteUser(String uid) => _db.collection('users').doc(uid).delete();
 
   // ---- Drivers ----
   Future<void> submitDriverApplication(DriverProfile profile) => _db
@@ -65,6 +71,12 @@ class FirestoreService {
       _db.collection('drivers').doc(uid).update({
         'approvalStatus': status.index,
       });
+  Stream<List<DriverProfile>> watchAllDrivers() => _db
+      .collection('drivers')
+      .snapshots()
+      .map((s) => s.docs.map((d) => DriverProfile.fromMap(d.id, d.data())).toList());
+
+  Future<void> deleteDriver(String uid) => _db.collection('drivers').doc(uid).delete();
 
   // ---- Vouching ----
   Future<void> addVouch(
@@ -127,6 +139,12 @@ class FirestoreService {
       _db.collection('vendors').doc(vendorId).update({
         'approvalStatus': status.index,
       });
+  Stream<List<Vendor>> watchAllVendors() => _db
+      .collection('vendors')
+      .snapshots()
+      .map((s) => s.docs.map((d) => Vendor.fromMap(d.id, d.data())).toList());
+
+  Future<void> deleteVendor(String vendorId) => _db.collection('vendors').doc(vendorId).delete();
 
   // ---- Products (vendor CRUD) ----
   Future<DocumentReference> addProduct(String vendorId, Map<String, dynamic> data) =>
@@ -141,6 +159,11 @@ class FirestoreService {
   /// Updates store settings fields on the vendor doc.
   Future<void> updateVendorSettings(String vendorId, Map<String, dynamic> data) =>
       _db.collection('vendors').doc(vendorId).update(data);
+  Stream<List<KgoroOrder>> watchAllOrders() => _db
+      .collection('orders')
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map((s) => s.docs.map((d) => KgoroOrder.fromMap(d.id, d.data())).toList());
 
   // ---- Orders ----
   Future<DocumentReference> createOrder(Map<String, dynamic> orderData) =>

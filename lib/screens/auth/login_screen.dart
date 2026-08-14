@@ -243,7 +243,6 @@ class _SignUpFormState extends ConsumerState<_SignUpForm> {
   final _contactController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  UserRole _selectedRole = UserRole.customer;
   bool _loading = false;
   bool _obscure = true;
 
@@ -262,7 +261,7 @@ class _SignUpFormState extends ConsumerState<_SignUpForm> {
           fullName: _nameController.text.trim(),
           phone: _contactController.text.trim(),
           localArea: 'Thaba Nchu Town Centre',
-          role: _selectedRole,
+          role: UserRole.customer, // always customer on sign-up
           createdAt: DateTime.now(),
         );
         await ref.read(firestoreServiceProvider).upsertUser(newUser);
@@ -296,7 +295,28 @@ class _SignUpFormState extends ConsumerState<_SignUpForm> {
               'Join ${AppConstants.appName} to get started.',
               style: TextStyle(color: Colors.grey.shade600, fontSize: 15),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFEBF3FF),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFBDD6F5)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF1E6FDB)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'All accounts start as Customer. Switch to Driver or Vendor from the app after sign-up.',
+                      style: TextStyle(fontSize: 12, color: Color(0xFF0D2C54)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
@@ -304,24 +324,6 @@ class _SignUpFormState extends ConsumerState<_SignUpForm> {
                 prefixIcon: Icon(Icons.person_rounded),
               ),
               validator: (v) => v != null && v.isNotEmpty ? null : 'Required field',
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<UserRole>(
-              initialValue: _selectedRole,
-              decoration: const InputDecoration(
-                labelText: 'Account Type',
-                prefixIcon: Icon(Icons.work_outline_rounded),
-              ),
-              items: const [
-                DropdownMenuItem(value: UserRole.customer, child: Text('Customer')),
-                DropdownMenuItem(value: UserRole.driver, child: Text('Driver Partner')),
-                DropdownMenuItem(value: UserRole.vendor, child: Text('Vendor / Store Owner')),
-                // Administrator accounts are created out-of-band (Firebase console / Cloud Function)
-                // and must NOT be selectable during public sign-up.
-              ],
-              onChanged: (val) {
-                if (val != null) setState(() => _selectedRole = val);
-              },
             ),
             const SizedBox(height: 16),
             TextFormField(

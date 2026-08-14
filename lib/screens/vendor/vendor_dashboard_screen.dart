@@ -65,6 +65,9 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
             ),
           ],
         ),
+        actions: const [
+          SignOutIconButton(),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.primary,

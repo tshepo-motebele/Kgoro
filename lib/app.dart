@@ -242,14 +242,18 @@ class _VendorGate extends ConsumerWidget {
 
 // ─── Status screens ───────────────────────────────────────────────────────────
 
-class _PendingApprovalScreen extends StatelessWidget {
+class _PendingApprovalScreen extends ConsumerWidget {
   final String storeName;
   const _PendingApprovalScreen({required this.storeName});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: const [SignOutIconButton()],
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -269,28 +273,40 @@ class _PendingApprovalScreen extends StatelessWidget {
               const SizedBox(height: 28),
               Text(
                 storeName,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.ink),
+                    color: Theme.of(context).textTheme.titleLarge?.color ?? AppColors.ink),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Your store application is under review.',
                 style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.ink),
+                    color: Theme.of(context).textTheme.titleMedium?.color ?? AppColors.ink),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Our team will review your details and approve your store '
                 'as soon as possible. You will be notified when approved.',
                 style: TextStyle(
-                    color: AppColors.muted, fontSize: 14.5, height: 1.6),
+                    color: Theme.of(context).textTheme.bodySmall?.color ?? AppColors.muted, fontSize: 14.5, height: 1.6),
                 textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.arrow_back_rounded),
+                label: const Text('Return to Home'),
+                onPressed: () async {
+                  final user = ref.read(currentAppUserProvider).value;
+                  if (user != null) {
+                    final updatedUser = user.copyWith(role: UserRole.customer);
+                    await ref.read(firestoreServiceProvider).upsertUser(updatedUser);
+                  }
+                },
               ),
             ],
           ),
@@ -300,14 +316,18 @@ class _PendingApprovalScreen extends StatelessWidget {
   }
 }
 
-class _RejectedScreen extends StatelessWidget {
+class _RejectedScreen extends ConsumerWidget {
   final String storeName;
   const _RejectedScreen({required this.storeName});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: const [SignOutIconButton()],
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -327,10 +347,10 @@ class _RejectedScreen extends StatelessWidget {
               const SizedBox(height: 28),
               Text(
                 storeName,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.ink),
+                    color: Theme.of(context).textTheme.titleLarge?.color ?? AppColors.ink),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -343,11 +363,23 @@ class _RejectedScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Please contact Kgoro support for details on next steps.',
                 style: TextStyle(
-                    color: AppColors.muted, fontSize: 14.5, height: 1.6),
+                    color: Theme.of(context).textTheme.bodySmall?.color ?? AppColors.muted, fontSize: 14.5, height: 1.6),
                 textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 40),
+              OutlinedButton.icon(
+                icon: const Icon(Icons.arrow_back_rounded),
+                label: const Text('Return to Home'),
+                onPressed: () async {
+                  final user = ref.read(currentAppUserProvider).value;
+                  if (user != null) {
+                    final updatedUser = user.copyWith(role: UserRole.customer);
+                    await ref.read(firestoreServiceProvider).upsertUser(updatedUser);
+                  }
+                },
               ),
             ],
           ),

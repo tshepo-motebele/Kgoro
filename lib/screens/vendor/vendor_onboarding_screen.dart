@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../providers/providers.dart';
+import '../../models/models.dart';
+import '../../widgets/common_widgets.dart';
 
 /// Collects store details and creates the vendor doc with
 /// approvalStatus: pendingReview, linked to the signed-in user.
@@ -40,15 +43,35 @@ class _VendorOnboardingScreenState
 
     setState(() => _loading = true);
     try {
+      // Attempt to geocode the typed address into real coordinates.
+      // Falls back to town-centre pin if geocoding fails or address is empty.
+      double lat = AppConstants.townCentreLat;
+      double lng = AppConstants.townCentreLng;
+      final address = _addressController.text.trim();
+      if (address.isNotEmpty) {
+        try {
+          final results = await locationFromAddress(
+            '$address, $_localArea, Thaba Nchu, Free State, South Africa',
+          );
+          if (results.isNotEmpty) {
+            lat = results.first.latitude;
+            lng = results.first.longitude;
+          }
+        } catch (_) {
+          // No network, address not found, or geocoder unavailable —
+          // silently fall back to town-centre pin.
+        }
+      }
+
       final data = {
         'name': _nameController.text.trim(),
         'type': _serviceType.index,
         'imageUrl': '',
         'localArea': _localArea,
-        'address': _addressController.text.trim(),
+        'address': address,
         'contactPhone': _phoneController.text.trim(),
-        'lat': AppConstants.townCentreLat,
-        'lng': AppConstants.townCentreLng,
+        'lat': lat,
+        'lng': lng,
         'isOpen': false,
         'rating': 5.0,
         'approvalStatus': ApprovalStatus.pendingReview.index,
@@ -58,6 +81,8 @@ class _VendorOnboardingScreenState
         'submittedAt': DateTime.now().toIso8601String(),
       };
       await ref.read(firestoreServiceProvider).submitVendorApplication(data);
+      final updatedUser = user.copyWith(role: UserRole.vendor);
+      await ref.read(firestoreServiceProvider).upsertUser(updatedUser);
       // _RoleGate will now re-watch and show the pending screen automatically.
     } catch (e) {
       if (mounted) {
@@ -73,7 +98,11 @@ class _VendorOnboardingScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: const [SignOutIconButton()],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -220,10 +249,10 @@ class _VendorOnboardingScreenState
         padding: const EdgeInsets.only(bottom: 8),
         child: Text(
           text,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.w700,
             fontSize: 14,
-            color: AppColors.primaryDark,
+            color: Theme.of(context).textTheme.titleSmall?.color ?? AppColors.primaryDark,
           ),
         ),
       );

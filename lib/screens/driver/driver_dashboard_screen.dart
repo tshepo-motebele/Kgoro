@@ -7,6 +7,7 @@ import '../../core/constants.dart';
 import '../../providers/providers.dart';
 import '../../widgets/common_widgets.dart';
 import 'driver_jobs_screen.dart';
+import 'driver_application_screen.dart';
 
 class DriverDashboardScreen extends ConsumerStatefulWidget {
   const DriverDashboardScreen({super.key});
@@ -48,18 +49,64 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
       ),
       data: (profile) {
         if (profile == null) {
-          return const Scaffold(
-            body: EmptyState(
-              icon: Icons.badge_outlined,
-              title: 'No application found',
-              subtitle: 'Apply to become a Kgoro driver from your profile page.',
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Driver dashboard'),
+              actions: const [SignOutIconButton()],
+            ),
+            body: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      decoration: const BoxDecoration(
+                        color: AppColors.mountainTint,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.badge_outlined,
+                          size: 40, color: AppColors.mountain),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'No application found',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 18),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Complete your driver application — ID, proof of '
+                      'address, and vehicle type — to start receiving job offers.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade600, height: 1.5),
+                    ),
+                    const SizedBox(height: 28),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.drive_eta_rounded),
+                      label: const Text('Apply now'),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const DriverApplicationScreen(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           );
         }
 
         if (profile.approvalStatus != ApprovalStatus.approved) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Driver dashboard')),
+            appBar: AppBar(
+              title: const Text('Driver dashboard'),
+              actions: const [SignOutIconButton()],
+            ),
             body: _PendingApprovalView(profile: profile),
           );
         }
@@ -69,6 +116,7 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
           child: Scaffold(
             appBar: AppBar(
               title: const Text('Driver dashboard'),
+              actions: const [SignOutIconButton()],
               bottom: const TabBar(
                 tabs: [
                   Tab(text: 'Dashboard'),

@@ -9,6 +9,7 @@ import '../../core/app_config.dart';
 import '../driver/driver_dashboard_screen.dart';
 import '../driver/become_driver_intro_screen.dart';
 import '../admin/admin_dashboard_screen.dart';
+import '../vendor/vendor_onboarding_screen.dart';
 import 'edit_profile_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -73,6 +74,15 @@ class ProfileScreen extends ConsumerWidget {
               subtitle: 'Earn money delivering or driving in Thaba Nchu',
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const BecomeDriverIntroScreen()),
+              ),
+            ),
+          if (user?.role == UserRole.customer)
+            _ProfileTile(
+              icon: Icons.storefront_rounded,
+              title: 'Register your store',
+              subtitle: 'Start selling food, groceries, or services',
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const VendorOnboardingScreen()),
               ),
             ),
           if (user?.role == UserRole.admin)

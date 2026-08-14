@@ -37,7 +37,10 @@ service cloud.firestore {
     // been removed. Role changes are admin-only (see second allow update).
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow create: if isOwner(uid);
+      // Role is restricted to customer(0)/driver(1)/vendor(2) at creation time.
+      // This closes the self-elevation gap: a caller bypassing the app UI
+      // cannot write role:3 (admin) on their own user doc.
+      allow create: if isOwner(uid) && request.resource.data.role in [0, 1, 2];
       // Users may update their own profile, but cannot self-elevate their
       // residency verification flag or role.
       allow update: if isOwner(uid) &&

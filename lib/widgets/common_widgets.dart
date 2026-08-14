@@ -1,7 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shimmer/shimmer.dart';
 import '../core/theme.dart';
+import '../providers/providers.dart';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SignOutIconButton
+// Reusable sign-out action for every AppBar that needs it (driver, vendor,
+// admin, pending/rejected screens). Invalidates auth + driver + cart state.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class SignOutIconButton extends ConsumerWidget {
+  const SignOutIconButton({super.key});
+
+  Future<void> _signOut(WidgetRef ref) async {
+    await ref.read(authServiceProvider).signOutAndCleanup();
+    ref.invalidate(currentAppUserProvider);
+    ref.invalidate(currentDriverProfileProvider);
+    ref.invalidate(cartProvider);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return IconButton(
+      icon: const Icon(Icons.logout_rounded),
+      tooltip: 'Sign out',
+      onPressed: () => _signOut(ref),
+    );
+  }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // KgoroStatusPill

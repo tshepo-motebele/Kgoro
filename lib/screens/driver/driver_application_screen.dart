@@ -108,6 +108,8 @@ class _DriverApplicationScreenState
     );
 
     await ref.read(firestoreServiceProvider).submitDriverApplication(profile);
+    final updatedUser = user.copyWith(role: UserRole.driver);
+    await ref.read(firestoreServiceProvider).upsertUser(updatedUser);
     setState(() => _submitting = false);
 
     if (mounted) {

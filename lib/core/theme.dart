@@ -293,7 +293,7 @@ class AppTheme {
     );
   }
 
-  // ── Dark theme (preserves existing dark experience) ────────────────────────
+  // ── Dark theme (Blue-based aesthetic) ──────────────────────────────────────
   static ThemeData get dark {
     final base = ThemeData(useMaterial3: true, brightness: Brightness.dark);
     final textTheme = GoogleFonts.plusJakartaSansTextTheme(base.textTheme).apply(
@@ -301,21 +301,21 @@ class AppTheme {
       displayColor: Colors.white,
     );
     return base.copyWith(
-      scaffoldBackgroundColor: const Color(0xFF0D1F18),
+      scaffoldBackgroundColor: const Color(0xFF0A192F), // Deep Navy
       textTheme: textTheme,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.mountain,
+        seedColor: AppColors.primary,
         brightness: Brightness.dark,
-        primary: const Color(0xFF4CAF82),
-        onPrimary: Colors.white,
+        primary: AppColors.primaryLight,
+        onPrimary: AppColors.primaryDark,
         secondary: AppColors.naledi,
         onSecondary: AppColors.ink,
-        surface: const Color(0xFF142419),
+        surface: const Color(0xFF112240), // Slightly lighter navy for surfaces
         onSurface: Colors.white,
         error: AppColors.error,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: const Color(0xFF0D1F18),
+        backgroundColor: const Color(0xFF0A192F),
         foregroundColor: Colors.white,
         elevation: 0,
         titleTextStyle: GoogleFonts.plusJakartaSans(
@@ -326,7 +326,7 @@ class AppTheme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2D6A4F),
+          backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(52),
           elevation: 0,
@@ -336,20 +336,20 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: const Color(0xFF1A2E20),
+        color: const Color(0xFF112240),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
-          side: const BorderSide(color: Color(0xFF2A3F2E)),
+          side: const BorderSide(color: Color(0xFF233554)),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: const Color(0xFF142419),
-        indicatorColor: const Color(0xFF2D6A4F),
+        backgroundColor: const Color(0xFF0A192F),
+        indicatorColor: const Color(0xFF233554),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => GoogleFonts.plusJakartaSans(
             fontSize: 11,
             fontWeight: states.contains(WidgetState.selected) ? FontWeight.w800 : FontWeight.w600,
-            color: states.contains(WidgetState.selected) ? const Color(0xFF4CAF82) : Colors.white60,
+            color: states.contains(WidgetState.selected) ? AppColors.primaryLight : Colors.white60,
           ),
         ),
       ),

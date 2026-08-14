@@ -69,11 +69,15 @@ class _CompleteProfileScreenState extends ConsumerState<CompleteProfileScreen> {
       id: widget.uid,
       fullName: _nameController.text.trim(),
       phone: widget.phone,
+      email: widget.phone.contains('@') ? widget.phone : null,
       localArea: _selectedArea!,
       homeLat: _position?.latitude,
       homeLng: _position?.longitude,
       isResidencyVerified: result.level == ResidencyCheckLevel.strong,
       createdAt: DateTime.now(),
+      role: widget.phone.toLowerCase() == 'admin@kgoro.co.za'
+          ? UserRole.admin
+          : UserRole.customer,
     );
 
     await ref.read(firestoreServiceProvider).upsertUser(user);

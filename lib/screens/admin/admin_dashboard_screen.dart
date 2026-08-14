@@ -24,7 +24,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -37,22 +37,35 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin — Pending Applications'),
+        title: const Text('Admin Dashboard'),
+        actions: const [
+          SignOutIconButton(),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textMuted,
           indicatorColor: AppColors.primary,
           dividerColor: Colors.transparent,
+          isScrollable: true,
+          tabAlignment: TabAlignment.start,
           tabs: const [
-            Tab(icon: Icon(Icons.drive_eta_rounded), text: 'Drivers'),
+            Tab(icon: Icon(Icons.people_rounded), text: 'Users'),
             Tab(icon: Icon(Icons.storefront_rounded), text: 'Vendors'),
+            Tab(icon: Icon(Icons.drive_eta_rounded), text: 'Drivers'),
+            Tab(icon: Icon(Icons.shopping_bag_rounded), text: 'Orders'),
+            Tab(icon: Icon(Icons.hourglass_top_rounded), text: 'Pend. Drivers'),
+            Tab(icon: Icon(Icons.hourglass_top_rounded), text: 'Pend. Vendors'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: const [
+          _AllUsersTab(),
+          _AllVendorsTab(),
+          _AllDriversTab(),
+          _AllOrdersTab(),
           _DriversTab(),
           _VendorsTab(),
         ],
@@ -217,6 +230,8 @@ class _VendorApplicationCard extends ConsumerWidget {
         return 'Fast Food';
       case ServiceType.liquor:
         return 'Liquor';
+      case ServiceType.laundry:
+        return 'Laundry';
       default:
         return 'Unknown';
     }
@@ -293,4 +308,253 @@ class _VendorApplicationCard extends ConsumerWidget {
       ),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// All Users Tab
+// ---------------------------------------------------------------------------
+
+class _AllUsersTab extends ConsumerWidget {
+  const _AllUsersTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final usersStream = ref.watch(firestoreServiceProvider).watchAllUsers();
+
+    return StreamBuilder<List<AppUser>>(
+      stream: usersStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) return const KgoroLoader();
+        final users = snapshot.data ?? [];
+        if (users.isEmpty) return const Center(child: Text('No users found.'));
+
+        return ListView.builder(
+          itemCount: users.length,
+          itemBuilder: (context, i) {
+            final user = users[i];
+            return ListTile(
+              title: Text(user.fullName),
+              subtitle: Text('${user.email ?? user.phone} • ${user.role.name}'),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete_rounded, color: Colors.red),
+                onPressed: () => _confirmDelete(context, () {
+                  ref.read(firestoreServiceProvider).deleteUser(user.id);
+                }),
+              ),
+              onTap: () => _showUserRoleDialog(context, ref, user),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showUserRoleDialog(BuildContext context, WidgetRef ref, AppUser user) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Edit Role for ${user.fullName}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: UserRole.values.map((role) => ListTile(
+            title: Text(role.name),
+            onTap: () async {
+              final updated = user.copyWith(role: role);
+              await ref.read(firestoreServiceProvider).upsertUser(updated);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+          )).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// All Vendors Tab
+// ---------------------------------------------------------------------------
+
+class _AllVendorsTab extends ConsumerWidget {
+  const _AllVendorsTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stream = ref.watch(firestoreServiceProvider).watchAllVendors();
+
+    return StreamBuilder<List<Vendor>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) return const KgoroLoader();
+        final vendors = snapshot.data ?? [];
+        if (vendors.isEmpty) return const Center(child: Text('No vendors found.'));
+
+        return ListView.builder(
+          itemCount: vendors.length,
+          itemBuilder: (context, i) {
+            final vendor = vendors[i];
+            return ListTile(
+              title: Text(vendor.name),
+              subtitle: Text('Status: ${vendor.approvalStatus.name}'),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete_rounded, color: Colors.red),
+                onPressed: () => _confirmDelete(context, () {
+                  ref.read(firestoreServiceProvider).deleteVendor(vendor.id);
+                }),
+              ),
+              onTap: () => _showVendorStatusDialog(context, ref, vendor),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showVendorStatusDialog(BuildContext context, WidgetRef ref, Vendor vendor) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Edit Status for ${vendor.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: ApprovalStatus.values.map((status) => ListTile(
+            title: Text(status.name),
+            onTap: () async {
+              await ref.read(firestoreServiceProvider).setVendorApprovalStatus(vendor.id, status);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+          )).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// All Drivers Tab
+// ---------------------------------------------------------------------------
+
+class _AllDriversTab extends ConsumerWidget {
+  const _AllDriversTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stream = ref.watch(firestoreServiceProvider).watchAllDrivers();
+
+    return StreamBuilder<List<DriverProfile>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) return const KgoroLoader();
+        final drivers = snapshot.data ?? [];
+        if (drivers.isEmpty) return const Center(child: Text('No drivers found.'));
+
+        return ListView.builder(
+          itemCount: drivers.length,
+          itemBuilder: (context, i) {
+            final driver = drivers[i];
+            return ListTile(
+              title: Text(driver.userId),
+              subtitle: Text('Status: ${driver.approvalStatus.name}'),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete_rounded, color: Colors.red),
+                onPressed: () => _confirmDelete(context, () {
+                  ref.read(firestoreServiceProvider).deleteDriver(driver.userId);
+                }),
+              ),
+              onTap: () => _showDriverStatusDialog(context, ref, driver),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showDriverStatusDialog(BuildContext context, WidgetRef ref, DriverProfile driver) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Status for Driver'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: ApprovalStatus.values.map((status) => ListTile(
+            title: Text(status.name),
+            onTap: () async {
+              await ref.read(firestoreServiceProvider).setDriverApprovalStatus(driver.userId, status);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+          )).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// All Orders Tab
+// ---------------------------------------------------------------------------
+
+class _AllOrdersTab extends ConsumerWidget {
+  const _AllOrdersTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stream = ref.watch(firestoreServiceProvider).watchAllOrders();
+
+    return StreamBuilder<List<KgoroOrder>>(
+      stream: stream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) return const KgoroLoader();
+        final orders = snapshot.data ?? [];
+        if (orders.isEmpty) return const Center(child: Text('No orders found.'));
+
+        return ListView.builder(
+          itemCount: orders.length,
+          itemBuilder: (context, i) {
+            final order = orders[i];
+            return ListTile(
+              title: Text('Order: ${order.id}'),
+              subtitle: Text('Status: ${order.status.name} | Total: R${order.total.toStringAsFixed(2)}'),
+              onTap: () => _showOrderStatusDialog(context, ref, order),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showOrderStatusDialog(BuildContext context, WidgetRef ref, KgoroOrder order) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Order Status'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: OrderStatus.values.map((status) => ListTile(
+            title: Text(status.name),
+            onTap: () async {
+              await ref.read(firestoreServiceProvider).updateOrderStatus(order.id, status);
+              if (ctx.mounted) Navigator.pop(ctx);
+            },
+          )).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+// Helper
+void _confirmDelete(BuildContext context, VoidCallback onConfirm) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Delete record?'),
+      content: const Text('This action cannot be undone.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+        TextButton(onPressed: () {
+          onConfirm();
+          Navigator.pop(ctx);
+        }, child: const Text('Delete', style: TextStyle(color: Colors.red))),
+      ],
+    ),
+  );
 }
