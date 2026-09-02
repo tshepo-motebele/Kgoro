@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/theme.dart';
 import '../providers/providers.dart';
+import '../widgets/common_widgets.dart';
 import 'home/home_dashboard_screen.dart';
 import 'orders/orders_screen.dart';
 import 'profile/profile_screen.dart';
@@ -19,9 +20,16 @@ class HomeShell extends ConsumerWidget {
     ];
 
     return Scaffold(
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 220),
-        child: IndexedStack(key: ValueKey(tab), index: tab, children: screens),
+      body: Column(
+        children: [
+          const KgoroOfflineBanner(),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 220),
+              child: IndexedStack(key: ValueKey(tab), index: tab, children: screens),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(

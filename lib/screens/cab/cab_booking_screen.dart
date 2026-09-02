@@ -5,6 +5,7 @@ import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../providers/providers.dart';
 import '../../services/pricing_service.dart';
+import '../orders/ride_tracking_screen.dart';
 import 'dart:async';
 
 class CabBookingScreen extends ConsumerStatefulWidget {
@@ -264,7 +265,7 @@ class _CabBookingScreenState extends ConsumerState<CabBookingScreen> {
     final dropoffCoords = AppConstants.areaCoordinates[_dropoffArea!] ?? [AppConstants.townCentreLat, AppConstants.townCentreLng];
 
     try {
-      await ref.read(firestoreServiceProvider).createRideRequest({
+      final docRef = await ref.read(firestoreServiceProvider).createRideRequest({
         'customerId': user?.id ?? 'demo',
         'pickupArea': _pickupArea,
         'dropoffArea': _dropoffArea,
@@ -277,16 +278,19 @@ class _CabBookingScreenState extends ConsumerState<CabBookingScreen> {
         'createdAt': DateTime.now().toIso8601String(),
       });
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Looking for the fairest nearby driver…')),
+      // Navigate to ride tracking instead of just popping back
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => RideTrackingScreen(rideId: docRef.id),
+        ),
       );
-      Navigator.of(context).pop();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not request ride. Check your connection.')),
-      );
-    } finally {
-      if (mounted) setState(() => _requesting = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not request ride. Check your connection.')),
+        );
+        setState(() => _requesting = false);
+      }
     }
   }
 }

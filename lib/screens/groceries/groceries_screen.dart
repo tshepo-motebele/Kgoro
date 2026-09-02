@@ -1,6 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
@@ -24,8 +24,8 @@ class GroceriesScreen extends ConsumerWidget {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const KgoroShimmerList();
           }
-          final vendors = snapshot.data ?? [];
-          if (vendors.isEmpty) {
+          final unsorted = snapshot.data ?? [];
+          if (unsorted.isEmpty) {
             return const EmptyState(
               icon: Icons.local_grocery_store_outlined,
               title: 'No grocery shops yet',
@@ -34,6 +34,16 @@ class GroceriesScreen extends ConsumerWidget {
               lottieUrl: 'https://assets9.lottiefiles.com/packages/lf20_x62chj8y.json',
             );
           }
+
+          // Sort: open stores first, then alphabetically within each group
+          final vendors = [...unsorted]
+            ..sort((a, b) {
+              if (a.isOpen == b.isOpen) {
+                return a.name.compareTo(b.name);
+              }
+              return a.isOpen ? -1 : 1;
+            });
+
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: vendors.length,
@@ -52,62 +62,101 @@ class _VendorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => VendorDetailScreen(vendor: vendor)),
-      ),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            children: [
-              Hero(
-                tag: 'vendor_image_${vendor.id}',
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: AppColors.veld.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
-                    image: vendor.imageUrl.isNotEmpty
-                        ? DecorationImage(
-                            image: CachedNetworkImageProvider(vendor.imageUrl),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
+    final isClosed = !vendor.isOpen;
+
+    return Opacity(
+      opacity: isClosed ? 0.62 : 1.0,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: isClosed
+            ? () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('${vendor.name} is currently closed.'),
+                    duration: const Duration(seconds: 2),
                   ),
-                  child: vendor.imageUrl.isEmpty
-                      ? const Icon(Icons.storefront_rounded, color: AppColors.veld)
-                      : null,
+                );
+              }
+            : () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                      builder: (_) => VendorDetailScreen(vendor: vendor)),
                 ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(vendor.name,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                    const SizedBox(height: 2),
-                    Text(vendor.localArea,
-                        style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.star_rounded, size: 14, color: AppColors.naledi),
-                        Text(' ${vendor.rating.toStringAsFixed(1)}',
-                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                      ],
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Row(
+              children: [
+                // ── Store image ─────────────────────────────────────────
+                Hero(
+                  tag: 'vendor_image_${vendor.id}',
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: AppColors.veld.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                  ],
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(14),
+                      child: vendor.imageUrl.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: vendor.imageUrl,
+                              fit: BoxFit.cover,
+                              placeholder: (_, __) => const Center(
+                                  child: CircularProgressIndicator()),
+                              errorWidget: (_, __, ___) => const Icon(
+                                  Icons.storefront_rounded,
+                                  color: AppColors.veld),
+                            )
+                          : const Icon(Icons.storefront_rounded,
+                              color: AppColors.veld),
+                    ),
+                  ),
                 ),
-              ),
-              StatusPill(
-                label: vendor.isOpen ? 'Open' : 'Closed',
-                color: vendor.isOpen ? AppColors.success : Colors.grey,
-              ),
-            ],
+                const SizedBox(width: 14),
+
+                // ── Name + area + rating ────────────────────────────────
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        vendor.name,
+                        style: const TextStyle(
+                            fontWeight: FontWeight.w700, fontSize: 15),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        vendor.localArea,
+                        style: TextStyle(
+                            color: Colors.grey.shade600, fontSize: 12),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          const Icon(Icons.star_rounded,
+                              size: 14, color: AppColors.naledi),
+                          Text(
+                            ' ${vendor.rating.toStringAsFixed(1)}',
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Open/closed pill ────────────────────────────────────
+                StatusPill(
+                  label: vendor.isOpen ? 'Open' : 'Closed',
+                  color: vendor.isOpen ? AppColors.success : AppColors.muted,
+                  icon: vendor.isOpen
+                      ? Icons.check_circle_rounded
+                      : Icons.do_not_disturb_on_rounded,
+                ),
+              ],
+            ),
           ),
         ),
       ),

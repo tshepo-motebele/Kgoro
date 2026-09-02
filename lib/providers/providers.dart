@@ -1,8 +1,10 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide AuthProvider;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import '../core/constants.dart';
 
 final authServiceProvider = Provider<AuthService>((ref) {
   return AuthService();
@@ -66,10 +68,35 @@ final customerRidesProvider = StreamProvider<List<RideRequest>>((ref) {
   );
 });
 
+/// Active (in-progress) orders for the home screen ActiveOrderCard.
+/// Returns the most recently created order that is not yet delivered/cancelled.
+final activeOrderProvider = Provider<KgoroOrder?>((ref) {
+  final ordersAsync = ref.watch(customerOrdersProvider);
+  final orders = ordersAsync.valueOrNull ?? [];
+  final activeStatuses = {
+    OrderStatus.pending,
+    OrderStatus.matched,
+    OrderStatus.accepted,
+    OrderStatus.pickedUp,
+    OrderStatus.onTheWay,
+  };
+  final active = orders.where((o) => activeStatuses.contains(o.status)).toList();
+  if (active.isEmpty) return null;
+  // Already sorted newest-first from Firestore
+  return active.first;
+});
+
 /// Live stream of a vendor's incoming orders, keyed by vendorId.
 final vendorOrdersProvider =
     StreamProvider.family<List<KgoroOrder>, String>((ref, vendorId) {
   return ref.watch(firestoreServiceProvider).watchVendorOrders(vendorId);
+});
+
+/// Connectivity state — true when the device has any network access.
+final connectivityProvider = StreamProvider<bool>((ref) {
+  return Connectivity()
+      .onConnectivityChanged
+      .map((results) => results.any((r) => r != ConnectivityResult.none));
 });
 
 /// Cart state — kept simple (in-memory, per-vendor) since orders are

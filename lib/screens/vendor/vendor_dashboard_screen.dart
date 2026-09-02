@@ -51,13 +51,15 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
                     fontSize: 18,
                     color: AppColors.primaryDark)),
             Text(
-              widget.vendor.type == ServiceType.groceries
+            widget.vendor.type == ServiceType.groceries
                   ? 'Groceries'
                   : widget.vendor.type == ServiceType.food
                       ? 'Fast Food'
                       : widget.vendor.type == ServiceType.liquor
                           ? 'Liquor'
-                          : 'Laundry',
+                          : widget.vendor.type == ServiceType.cab
+                              ? 'Cab / Rides'
+                              : 'Laundry',
               style: const TextStyle(
                   fontSize: 12,
                   color: AppColors.textMuted,

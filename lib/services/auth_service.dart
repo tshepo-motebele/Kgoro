@@ -76,10 +76,15 @@ class AuthService {
 
   /// Signs out the current user, deleting their FCM token first so no
   /// further push notifications are routed to this device.
+  /// Token deletion is best-effort — if it fails, sign-out still proceeds.
   Future<void> signOutAndCleanup() async {
     final uid = _auth.currentUser?.uid;
     if (uid != null) {
-      await _firestore.deleteToken(uid);
+      try {
+        await _firestore.deleteToken(uid);
+      } catch (_) {
+        // Token deletion is non-critical; proceed with sign-out regardless.
+      }
     }
     await _auth.signOut();
   }

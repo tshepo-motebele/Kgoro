@@ -39,29 +39,37 @@ class NotificationService {
     }
 
     // ── 2. Save token ──────────────────────────────────────────────────────────
-    final token = await _fcm.getToken();
-    if (token != null) await _saveToken(uid, token);
+    try {
+      // Note: On Web, this requires a vapidKey to be passed and a firebase-messaging-sw.js file.
+      // We wrap in try-catch to ensure the app doesn't crash on startup if FCM isn't fully configured.
+      final token = await _fcm.getToken();
+      if (token != null) await _saveToken(uid, token);
+    } catch (e) {
+      debugPrint('[FCM] Failed to get token (push notifications may not work): $e');
+    }
 
     // Refresh on token rotation
-    _fcm.onTokenRefresh.listen((t) => _saveToken(uid, t));
+    try {
+      _fcm.onTokenRefresh.listen((t) => _saveToken(uid, t));
 
-    // ── 3. Foreground messages ─────────────────────────────────────────────────
-    FirebaseMessaging.onMessage.listen((message) {
-      debugPrint('[FCM] Foreground: ${message.notification?.title}');
-      // Foreground handling is done via in-app SnackBar from the UI layer
-      // using the onTap callback if provided.
-      if (onTap != null) onTap(message.data, foreground: true);
-    });
+      // ── 3. Foreground messages ─────────────────────────────────────────────────
+      FirebaseMessaging.onMessage.listen((message) {
+        debugPrint('[FCM] Foreground: ${message.notification?.title}');
+        if (onTap != null) onTap(message.data, foreground: true);
+      });
 
-    // ── 4. Background tap (app was in background, user tapped notification) ────
-    FirebaseMessaging.onMessageOpenedApp.listen((message) {
-      if (onTap != null) onTap(message.data, foreground: false);
-    });
+      // ── 4. Background tap (app was in background, user tapped notification) ────
+      FirebaseMessaging.onMessageOpenedApp.listen((message) {
+        if (onTap != null) onTap(message.data, foreground: false);
+      });
 
-    // ── 5. Terminated tap (app was closed, user tapped notification) ───────────
-    final initial = await _fcm.getInitialMessage();
-    if (initial != null && onTap != null) {
-      onTap(initial.data, foreground: false);
+      // ── 5. Terminated tap (app was closed, user tapped notification) ───────────
+      final initial = await _fcm.getInitialMessage();
+      if (initial != null && onTap != null) {
+        onTap(initial.data, foreground: false);
+      }
+    } catch (e) {
+      debugPrint('[FCM] Failed to initialize message listeners: $e');
     }
   }
 

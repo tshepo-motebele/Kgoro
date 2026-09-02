@@ -54,7 +54,53 @@ class _KgoroAppState extends ConsumerState<KgoroApp> {
   }
 
   void _handleNotificationTap(Map<String, dynamic> data, {required bool foreground}) {
-    final type = data['type'] as String?;
+    final type  = data['type']  as String?;
+    final title = data['title'] as String?;
+    final body  = data['body']  as String?;
+
+    // Foreground: always show an in-app SnackBar so the user sees it
+    if (foreground && (title != null || body != null)) {
+      final messenger = ScaffoldMessenger.of(_navKey.currentContext!);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.notifications_rounded, color: Colors.white, size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (title != null)
+                      Text(title,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w700, fontSize: 13)),
+                    if (body != null)
+                      Text(body,
+                          style:
+                              const TextStyle(fontSize: 12, color: Colors.white70)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: AppColors.primaryDark,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 4),
+          action: SnackBarAction(
+            label: 'View',
+            textColor: AppColors.naledi,
+            onPressed: () => _handleNotificationTap(data, foreground: false),
+          ),
+        ),
+      );
+      return; // Let the user decide to tap "View" rather than forcing navigation
+    }
+
+    // Background / terminated: route directly to the relevant screen
     switch (type) {
       case 'NEW_ORDER':
       case 'ORDER_ACCEPTED':

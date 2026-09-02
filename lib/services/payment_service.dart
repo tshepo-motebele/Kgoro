@@ -38,7 +38,9 @@ class PaymentService {
       // Return URLs — deep-link back into the app
       'return_url':   'kgoro://payment/success?orderId=$orderId',
       'cancel_url':   'kgoro://payment/cancel?orderId=$orderId',
-      'notify_url':   'https://us-central1-${AppConfig.payfastMerchantId}.cloudfunctions.net/payfastItn',
+      // ITN notify_url: reads the Cloud Functions base URL from .env
+      // so it correctly points to the Firebase project, not the merchant ID.
+      'notify_url':   '${AppConfig.cloudFunctionsBaseUrl}/payfastItn',
     };
 
     // Generate signature

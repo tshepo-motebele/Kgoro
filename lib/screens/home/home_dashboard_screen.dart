@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../providers/providers.dart';
 import '../../widgets/common_widgets.dart';
@@ -9,6 +10,7 @@ import '../cab/cab_booking_screen.dart';
 import '../liquor/liquor_screen.dart';
 import '../laundry/laundry_screen.dart';
 import '../driver/become_driver_intro_screen.dart';
+import '../orders/order_tracking_screen.dart';
 
 class HomeDashboardScreen extends ConsumerWidget {
   const HomeDashboardScreen({super.key});
@@ -16,12 +18,16 @@ class HomeDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userAsync = ref.watch(currentAppUserProvider);
+    final activeOrder = ref.watch(activeOrderProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ── Offline banner ─────────────────────────────────────────────
+          const KgoroOfflineBanner(),
+
           // ── Hero header ───────────────────────────────────────────────
           userAsync.when(
             data: (user) {
@@ -68,20 +74,52 @@ class HomeDashboardScreen extends ConsumerWidget {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-              children: const [
-                SectionHeader(title: 'Our Services'),
-                _ServiceGrid(),
-                SectionHeader(title: 'Earn with Kgoro'),
-                _EarnCard(),
-                SectionHeader(title: 'Why Kgoro?'),
-                _TrustBlock(),
-                SizedBox(height: 16),
+              children: [
+                // ── Active order card (if an order is in progress) ──────
+                if (activeOrder != null) ...[
+                  ActiveOrderCard(
+                    status: _statusLabel(activeOrder.status),
+                    destination: activeOrder.dropoffArea,
+                    onTrack: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            OrderTrackingScreen(orderId: activeOrder.id),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
+
+                const SectionHeader(title: 'Our Services'),
+                const _ServiceGrid(),
+                const SectionHeader(title: 'Earn with Kgoro'),
+                const _EarnCard(),
+                const SectionHeader(title: 'Why Kgoro?'),
+                const _TrustBlock(),
+                const SizedBox(height: 16),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _statusLabel(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.pending:
+        return 'Finding driver';
+      case OrderStatus.matched:
+        return 'Driver matched';
+      case OrderStatus.accepted:
+        return 'Store preparing';
+      case OrderStatus.pickedUp:
+        return 'Picked up';
+      case OrderStatus.onTheWay:
+        return 'On the way';
+      default:
+        return 'In progress';
+    }
   }
 }
 
@@ -287,7 +325,7 @@ class _TrustBlock extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Theme.of(context).cardTheme.color ?? AppColors.surface,
           borderRadius: BorderRadius.circular(22),
           border: Border.all(color: AppColors.line),
           boxShadow: [
@@ -357,11 +395,11 @@ class _TrustRow extends StatelessWidget {
             padding: const EdgeInsets.only(top: 2),
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13.5,
                 height: 1.5,
                 fontWeight: FontWeight.w500,
-                color: AppColors.ink,
+                color: Theme.of(context).textTheme.bodyMedium?.color ?? AppColors.ink,
               ),
             ),
           ),

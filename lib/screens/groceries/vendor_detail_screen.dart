@@ -1,6 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
@@ -13,8 +13,11 @@ class VendorDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Use watch so the FAB re-renders when cart changes
     final cart = ref.watch(cartProvider);
-    final productsStream = ref.watch(firestoreServiceProvider).watchVendorProducts(vendor.id);
+    final cartTotal = cart.fold<double>(0, (sum, c) => sum + c.subtotal);
+    final productsStream =
+        ref.watch(firestoreServiceProvider).watchVendorProducts(vendor.id);
 
     return Scaffold(
       appBar: AppBar(title: Text(vendor.name)),
@@ -34,43 +37,53 @@ class VendorDetailScreen extends ConsumerWidget {
             );
           }
 
+          // Group products by category, preserving insertion order
           final categories = products.map((p) => p.category).toSet().toList();
 
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // ── Vendor banner ───────────────────────────────────────────
               Hero(
                 tag: 'vendor_image_${vendor.id}',
-                child: Container(
-                  height: 120,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    height: 140,
+                    width: double.infinity,
                     color: AppColors.veld.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(16),
-                    image: vendor.imageUrl.isNotEmpty
-                        ? DecorationImage(
-                            image: CachedNetworkImageProvider(vendor.imageUrl),
+                    child: vendor.imageUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: vendor.imageUrl,
                             fit: BoxFit.cover,
+                            placeholder: (_, __) => const Center(
+                                child: CircularProgressIndicator()),
+                            errorWidget: (_, __, ___) => const Icon(
+                                Icons.storefront_rounded,
+                                size: 48,
+                                color: AppColors.veld),
                           )
-                        : null,
+                        : const Icon(Icons.storefront_rounded,
+                            size: 48, color: AppColors.veld),
                   ),
-                  child: vendor.imageUrl.isEmpty
-                      ? const Icon(Icons.storefront_rounded, size: 48, color: AppColors.veld)
-                      : null,
                 ),
               ),
               const SizedBox(height: 20),
+
+              // ── Product sections ────────────────────────────────────────
               for (final category in categories) ...[
-                SectionHeader(title: category.isNotEmpty ? category : 'Products'),
+                SectionHeader(
+                    title: category.isNotEmpty ? category : 'Products'),
                 ...products
                     .where((p) => p.category == category)
                     .map((p) => _ProductRow(product: p)),
               ],
-              const SizedBox(height: 80),
+              const SizedBox(height: 100), // space for FAB
             ],
           );
         },
       ),
+      // ── Cart FAB — reactive via ref.watch above ──────────────────────────
       floatingActionButton: cart.isEmpty
           ? null
           : FloatingActionButton.extended(
@@ -82,8 +95,9 @@ class VendorDetailScreen extends ConsumerWidget {
               ),
               icon: const Icon(Icons.shopping_cart_rounded, color: Colors.white),
               label: Text(
-                'View cart · R${ref.read(cartProvider.notifier).total.toStringAsFixed(2)}',
-                style: const TextStyle(color: Colors.white),
+                'View cart · R${cartTotal.toStringAsFixed(2)}',
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.w700),
               ),
             ),
     );
@@ -100,58 +114,137 @@ class _ProductRow extends ConsumerWidget {
     final matches = cart.where((c) => c.product.id == product.id);
     final inCart = matches.isEmpty ? null : matches.first;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3EEE6),
+    final outOfStock = !product.inStock;
+
+    return Opacity(
+      opacity: outOfStock ? 0.5 : 1.0,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            // ── Product image ─────────────────────────────────────────────
+            ClipRRect(
               borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 56,
+                height: 56,
+                color: const Color(0xFFF3EEE6),
+                child: product.imageUrl.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: product.imageUrl,
+                        fit: BoxFit.cover,
+                        placeholder: (_, __) =>
+                            const Center(child: CircularProgressIndicator()),
+                        errorWidget: (_, __, ___) => const Icon(
+                            Icons.image_not_supported_rounded,
+                            color: AppColors.muted),
+                      )
+                    : const Icon(Icons.inventory_2_outlined, color: Colors.grey),
+              ),
             ),
-            child: const Icon(Icons.inventory_2_outlined, color: Colors.grey),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(product.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                Text('R${product.price.toStringAsFixed(2)}',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 13)),
-              ],
+            const SizedBox(width: 12),
+
+            // ── Name & price ──────────────────────────────────────────────
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          product.name,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      if (outOfStock)
+                        Container(
+                          margin: const EdgeInsets.only(left: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.muted.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'Out of stock',
+                            style: TextStyle(
+                                color: AppColors.muted,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                    ],
+                  ),
+                  Text(
+                    'R${product.price.toStringAsFixed(2)}',
+                    style: TextStyle(
+                        color: Colors.grey.shade600, fontSize: 13),
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (inCart == null)
-            OutlinedButton(
-              onPressed: () => ref.read(cartProvider.notifier).addProduct(product),
-              style: OutlinedButton.styleFrom(minimumSize: const Size(72, 36)),
-              child: const Text('Add'),
-            )
-          else
-            Row(
-              children: [
-                IconButton(
-                  onPressed: () => ref
-                      .read(cartProvider.notifier)
-                      .updateQuantity(product.id, inCart.quantity - 1),
-                  icon: const Icon(Icons.remove_circle_outline_rounded),
-                  color: AppColors.mountain,
-                ),
-                Text('${inCart.quantity}',
-                    style: const TextStyle(fontWeight: FontWeight.w700)),
-                IconButton(
-                  onPressed: () => ref
-                      .read(cartProvider.notifier)
-                      .updateQuantity(product.id, inCart.quantity + 1),
-                  icon: const Icon(Icons.add_circle_rounded),
-                  color: AppColors.mountain,
-                ),
-              ],
-            ),
-        ],
+
+            // ── Add / stepper ──────────────────────────────────────────────
+            if (outOfStock)
+              const SizedBox.shrink()
+            else if (inCart == null)
+              OutlinedButton(
+                onPressed: () =>
+                    ref.read(cartProvider.notifier).addProduct(product),
+                style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(72, 36)),
+                child: const Text('Add'),
+              )
+            else
+              Row(
+                children: [
+                  _MiniStepperButton(
+                    icon: Icons.remove_rounded,
+                    onTap: () => ref
+                        .read(cartProvider.notifier)
+                        .updateQuantity(product.id, inCart.quantity - 1),
+                  ),
+                  SizedBox(
+                    width: 28,
+                    child: Text(
+                      '${inCart.quantity}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  _MiniStepperButton(
+                    icon: Icons.add_rounded,
+                    onTap: () => ref
+                        .read(cartProvider.notifier)
+                        .updateQuantity(product.id, inCart.quantity + 1),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniStepperButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  const _MiniStepperButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: AppColors.mountainTint,
+          shape: BoxShape.circle,
+          border: Border.all(color: AppColors.mountain.withValues(alpha: 0.3)),
+        ),
+        child: Icon(icon, size: 16, color: AppColors.mountain),
       ),
     );
   }

@@ -32,6 +32,14 @@ class AppConfig {
       ? 'https://sandbox.payfast.co.za/eng/process'
       : 'https://www.payfast.co.za/eng/process';
 
+  // ── Cloud Functions ───────────────────────────────────────────────────────────
+  /// Base URL for Firebase Cloud Functions — used in PayFast ITN notify_url.
+  /// Set CLOUD_FUNCTIONS_BASE_URL in .env e.g.:
+  ///   CLOUD_FUNCTIONS_BASE_URL=https://us-central1-your-project.cloudfunctions.net
+  static String get cloudFunctionsBaseUrl =>
+      dotenv.env['CLOUD_FUNCTIONS_BASE_URL'] ??
+      'https://us-central1-kgoro-app.cloudfunctions.net';
+
   // ── Support ──────────────────────────────────────────────────────────────────
   static String get supportWhatsApp =>
       dotenv.env['SUPPORT_WHATSAPP_NUMBER'] ?? '27000000000';

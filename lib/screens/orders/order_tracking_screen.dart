@@ -120,11 +120,53 @@ class OrderTrackingScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+
+              // ── Cancel button — only when order is still pending ─────────────
+              if (status == OrderStatus.pending) ...[
+                const SizedBox(height: 20),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.error,
+                    side: const BorderSide(color: AppColors.error),
+                  ),
+                  icon: const Icon(Icons.cancel_outlined),
+                  label: const Text('Cancel order'),
+                  onPressed: () => _confirmCancel(context, ref),
+                ),
+              ],
             ],
           );
         },
       ),
     );
+  }
+
+  Future<void> _confirmCancel(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel order?'),
+        content: const Text(
+            'This cannot be undone. The order will be cancelled immediately.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Keep order')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.error),
+            child: const Text('Yes, cancel'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ref
+          .read(firestoreServiceProvider)
+          .cancelOrder(orderId);
+      if (context.mounted) Navigator.of(context).pop();
+    }
   }
 }
 
@@ -188,7 +230,17 @@ class _Timeline extends StatelessWidget {
     (OrderStatus.delivered, 'Delivered',             Icons.check_circle_rounded),
   ];
 
-  bool _isPast(OrderStatus step) => step.index <= current.index;
+  /// A step is "done" when the order has reached or passed it on the
+  /// happy path. Cancelled (index 6) is off the main track, so we
+  /// only mark steps past the delivered step (index 5) for cancelled
+  /// orders — which means nothing extra is lit up.
+  bool _isPast(OrderStatus step) {
+    if (current == OrderStatus.cancelled) {
+      // Don't light up any delivery steps for a cancelled order
+      return false;
+    }
+    return step.index <= current.index;
+  }
 
   @override
   Widget build(BuildContext context) {

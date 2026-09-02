@@ -182,6 +182,7 @@ class KgoroPrimaryButton extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 // KgoroEmptyState
 // Empty states always explain why and offer a next step.
+// Uses theme-aware text colors for dark mode compatibility.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class KgoroEmptyState extends StatelessWidget {
@@ -204,6 +205,9 @@ class KgoroEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final titleColor = Theme.of(context).textTheme.titleMedium?.color ?? AppColors.ink;
+    final bodyColor = Theme.of(context).textTheme.bodySmall?.color ?? AppColors.muted;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -226,18 +230,18 @@ class KgoroEmptyState extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w800,
-                color: AppColors.ink,
+                color: titleColor,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.muted,
+              style: TextStyle(
+                color: bodyColor,
                 height: 1.5,
                 fontSize: 14,
               ),
@@ -305,7 +309,11 @@ class KgoroErrorBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(color: AppColors.ink, height: 1.4, fontSize: 13.5),
+              style: TextStyle(
+                color: Theme.of(context).textTheme.bodyMedium?.color ?? AppColors.ink,
+                height: 1.4,
+                fontSize: 13.5,
+              ),
             ),
           ),
           if (onRetry != null)
@@ -320,7 +328,46 @@ class KgoroErrorBanner extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// KgoroOfflineBanner — shown when device has no network connectivity
+// ─────────────────────────────────────────────────────────────────────────────
+
+class KgoroOfflineBanner extends ConsumerWidget {
+  const KgoroOfflineBanner({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final connectivity = ref.watch(connectivityProvider);
+    final isOnline = connectivity.valueOrNull ?? true;
+
+    if (isOnline) return const SizedBox.shrink();
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      width: double.infinity,
+      color: AppColors.error,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      child: const Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.wifi_off_rounded, color: Colors.white, size: 16),
+          SizedBox(width: 8),
+          Text(
+            'No internet connection',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // SectionHeader
+// Uses theme-aware text color for dark mode compatibility.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class SectionHeader extends StatelessWidget {
@@ -341,7 +388,6 @@ class SectionHeader extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.2,
-                  color: AppColors.ink,
                 ),
           ),
           if (actionLabel != null)
@@ -743,8 +789,10 @@ class _AnimatedServiceCardState extends State<AnimatedServiceCard>
                   const Spacer(),
                   Text(
                     widget.title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.ink),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 14,
+                        color: Theme.of(context).textTheme.titleSmall?.color ?? AppColors.ink),
                   ),
                   const SizedBox(height: 3),
                   Text(

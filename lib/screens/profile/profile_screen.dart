@@ -12,11 +12,27 @@ import '../admin/admin_dashboard_screen.dart';
 import '../vendor/vendor_onboarding_screen.dart';
 import 'edit_profile_screen.dart';
 
-class ProfileScreen extends ConsumerWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  bool _signingOut = false;
+
+  Future<void> _signOut() async {
+    setState(() => _signingOut = true);
+    await ref.read(authServiceProvider).signOutAndCleanup();
+    // Invalidate critical state on sign out to prevent data leaking between sessions
+    ref.invalidate(currentAppUserProvider);
+    ref.invalidate(currentDriverProfileProvider);
+    ref.invalidate(cartProvider);
+    // No need to set _signingOut = false — widget is unmounted after signout
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = ref.watch(currentAppUserProvider).value;
     final driverProfile = ref.watch(currentDriverProfileProvider).value;
 
@@ -113,16 +129,18 @@ class ProfileScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
           OutlinedButton.icon(
-            onPressed: () async {
-              await ref.read(authServiceProvider).signOutAndCleanup();
-              // Invalidate critical state on sign out to prevent data leaking between sessions
-              ref.invalidate(currentAppUserProvider);
-              ref.invalidate(currentDriverProfileProvider);
-              ref.invalidate(cartProvider);
-            },
-            icon: const Icon(Icons.logout_rounded, color: AppColors.error),
-            label: const Text('Sign out', style: TextStyle(color: AppColors.error)),
-            style: OutlinedButton.styleFrom(side: const BorderSide(color: AppColors.error)),
+            onPressed: _signingOut ? null : _signOut,
+            icon: _signingOut
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: AppColors.error))
+                : const Icon(Icons.logout_rounded, color: AppColors.error),
+            label: Text(_signingOut ? 'Signing out…' : 'Sign out',
+                style: const TextStyle(color: AppColors.error)),
+            style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: AppColors.error)),
           ),
         ],
       ),

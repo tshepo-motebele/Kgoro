@@ -23,7 +23,8 @@ class FirestoreService {
       .doc(uid)
       .snapshots()
       .map((d) => d.exists ? AppUser.fromMap(d.id, d.data()!) : null);
-  Stream<List<AppUser>> watchAllUsers() => _db
+
+  Stream<List<AppUser>> watchAllUsers() => _db
       .collection('users')
       .snapshots()
       .map((s) => s.docs.map((d) => AppUser.fromMap(d.id, d.data())).toList());
@@ -71,7 +72,8 @@ class FirestoreService {
       _db.collection('drivers').doc(uid).update({
         'approvalStatus': status.index,
       });
-  Stream<List<DriverProfile>> watchAllDrivers() => _db
+
+  Stream<List<DriverProfile>> watchAllDrivers() => _db
       .collection('drivers')
       .snapshots()
       .map((s) => s.docs.map((d) => DriverProfile.fromMap(d.id, d.data())).toList());
@@ -139,7 +141,8 @@ class FirestoreService {
       _db.collection('vendors').doc(vendorId).update({
         'approvalStatus': status.index,
       });
-  Stream<List<Vendor>> watchAllVendors() => _db
+
+  Stream<List<Vendor>> watchAllVendors() => _db
       .collection('vendors')
       .snapshots()
       .map((s) => s.docs.map((d) => Vendor.fromMap(d.id, d.data())).toList());
@@ -159,7 +162,8 @@ class FirestoreService {
   /// Updates store settings fields on the vendor doc.
   Future<void> updateVendorSettings(String vendorId, Map<String, dynamic> data) =>
       _db.collection('vendors').doc(vendorId).update(data);
-  Stream<List<KgoroOrder>> watchAllOrders() => _db
+
+  Stream<List<KgoroOrder>> watchAllOrders() => _db
       .collection('orders')
       .orderBy('createdAt', descending: true)
       .snapshots()
