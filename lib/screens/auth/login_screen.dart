@@ -265,9 +265,20 @@ class _SignUpFormState extends ConsumerState<_SignUpForm> {
   final _nameController = TextEditingController();
   final _contactController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _loading = false;
   bool _obscure = true;
+  bool _obscureConfirm = true;
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _contactController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   bool _isPhone(String value) =>
       value.startsWith('+') || RegExp(r'^0[6-8]\d').hasMatch(value);
@@ -332,12 +343,18 @@ class _SignUpFormState extends ConsumerState<_SignUpForm> {
           final newUser = AppUser(
             id: credential.user!.uid,
             fullName: _nameController.text.trim(),
+            email: contact,
             phone: '',
             localArea: 'Thaba Nchu Town Centre',
             role: UserRole.customer,
             createdAt: DateTime.now(),
           );
           await ref.read(firestoreServiceProvider).upsertUser(newUser);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Account created! Welcome to Kgoro.')),
+            );
+          }
         }
       } on FirebaseAuthException catch (e) {
         if (mounted) {
@@ -427,27 +444,39 @@ class _SignUpFormState extends ConsumerState<_SignUpForm> {
             const SizedBox(height: 24),
             TextFormField(
               controller: _nameController,
+              textCapitalization: TextCapitalization.words,
               decoration: const InputDecoration(
-                labelText: 'Full Name',
+                labelText: 'Full name',
                 prefixIcon: Icon(Icons.person_rounded),
               ),
-              validator: (v) => v != null && v.isNotEmpty ? null : 'Required field',
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Full name is required';
+                if (v.trim().length < 2) return 'Please enter your full name';
+                return null;
+              },
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _contactController,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
-                labelText: 'Email or Phone (+27...)',
+                labelText: 'Email or phone',
                 prefixIcon: Icon(Icons.alternate_email_rounded),
-                helperText: 'For phone, use format +27820000000',
+                helperText: 'Phone: +27... or 0...   •   Email: you@example.com',
               ),
               validator: (v) {
-                if (v == null || v.isEmpty) return 'Required field';
-                if (!v.contains('@')) {
-                  // Phone validation
-                  final phoneRegex = RegExp(r'^\+[1-9]\d{1,14}$');
-                  if (!phoneRegex.hasMatch(v)) {
-                    return 'Must be valid E.164 format (e.g. +27...)';
+                if (v == null || v.trim().isEmpty) return 'Email or phone is required';
+                final value = v.trim();
+                if (_isPhone(value)) {
+                  if (!Validators.isValidSaPhone(value) && !value.startsWith('+')) {
+                    return 'Enter a valid South African phone number';
+                  }
+                  if (value.startsWith('+') && !RegExp(r'^\+[1-9]\d{7,14}$').hasMatch(value)) {
+                    return 'Use international format, e.g. +27821234567';
+                  }
+                } else {
+                  if (!Validators.isValidEmail(value)) {
+                    return 'Enter a valid email address';
                   }
                 }
                 return null;
@@ -465,7 +494,32 @@ class _SignUpFormState extends ConsumerState<_SignUpForm> {
                   onPressed: () => setState(() => _obscure = !_obscure),
                 ),
               ),
-              validator: (v) => v != null && v.length >= 6 ? null : 'Minimum 6 characters',
+              validator: (v) {
+                if (_isPhone(_contactController.text.trim())) return null;
+                if (v == null || v.isEmpty) return 'Password is required';
+                if (v.length < 6) return 'At least 6 characters';
+                if (!RegExp(r'[0-9]').hasMatch(v)) return 'Include at least one number';
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _confirmPasswordController,
+              obscureText: _obscureConfirm,
+              decoration: InputDecoration(
+                labelText: 'Confirm password',
+                prefixIcon: const Icon(Icons.lock_outline_rounded),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscureConfirm ? Icons.visibility_off : Icons.visibility),
+                  onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                ),
+              ),
+              validator: (v) {
+                if (_isPhone(_contactController.text.trim())) return null;
+                if (v == null || v.isEmpty) return 'Please confirm your password';
+                if (v != _passwordController.text) return 'Passwords do not match';
+                return null;
+              },
             ),
             const SizedBox(height: 32),
             ElevatedButton(
