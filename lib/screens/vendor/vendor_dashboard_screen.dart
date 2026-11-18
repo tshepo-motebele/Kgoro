@@ -355,14 +355,18 @@ class _MenuTab extends ConsumerWidget {
             ),
             backgroundColor: AppColors.primary,
             icon: const Icon(Icons.add, color: Colors.white),
-            label: const Text('Add Product',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+            label: Text(
+              vendor.type == ServiceType.laundry ? 'Add Service' : 'Add Product',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            ),
           ),
           body: products.isEmpty
-              ? const EmptyState(
+              ? EmptyState(
                   icon: Icons.inventory_2_rounded,
-                  title: 'No products yet',
-                  subtitle: 'Tap the + button below to add your first product.',
+                  title: vendor.type == ServiceType.laundry ? 'No services yet' : 'No products yet',
+                  subtitle: vendor.type == ServiceType.laundry
+                      ? 'Add wash & fold, ironing, or dry cleaning services.'
+                      : 'Tap the + button below to add your first product.',
                 )
               : Column(
                   children: [

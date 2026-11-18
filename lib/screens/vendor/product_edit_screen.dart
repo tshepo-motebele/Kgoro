@@ -190,7 +190,7 @@ class _ProductEditScreenState extends ConsumerState<ProductEditScreen> {
             const SizedBox(height: 24),
 
             _field('Product name', _nameController,
-                hint: 'e.g. White Bread 700g',
+                hint: 'e.g. Wash & Fold (per kg) or White Bread 700g',
                 validator: (v) =>
                     v != null && v.trim().isNotEmpty ? null : 'Required'),
             const SizedBox(height: 16),

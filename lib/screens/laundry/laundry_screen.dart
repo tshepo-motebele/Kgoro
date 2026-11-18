@@ -40,9 +40,7 @@ class LaundryScreen extends ConsumerWidget {
             return const EmptyState(
               icon: Icons.local_laundry_service_outlined,
               title: 'No laundry services yet',
-              subtitle:
-                  'Local laundry shops in Thaba Nchu are being onboarded. Check back soon.',
-              lottieUrl: 'https://assets9.lottiefiles.com/packages/lf20_x62chj8y.json',
+              subtitle: 'Wash & fold, ironing, and dry cleaning shops in Thaba Nchu are being onboarded. Check back soon!',
             );
           }
           return ListView.separated(
@@ -76,8 +74,8 @@ class _VendorCard extends StatelessWidget {
               Hero(
                 tag: 'vendor_image_${vendor.id}',
                 child: Container(
-                  width: 56,
-                  height: 56,
+                  width: 64,
+                  height: 64,
                   decoration: BoxDecoration(
                     color: AppColors.laundry.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(14),

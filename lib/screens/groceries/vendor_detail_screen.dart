@@ -29,11 +29,12 @@ class VendorDetailScreen extends ConsumerWidget {
           }
           final products = snapshot.data ?? [];
           if (products.isEmpty) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.inventory_2_outlined,
-              title: 'No products listed',
-              subtitle: 'This vendor has not added any products yet.',
-              lottieUrl: 'https://assets9.lottiefiles.com/packages/lf20_x62chj8y.json',
+              title: vendor.type == ServiceType.laundry ? 'No services listed yet' : 'No products listed',
+              subtitle: vendor.type == ServiceType.laundry
+                  ? 'This laundry has not added wash, fold, or ironing services yet.'
+                  : 'This vendor has not added any products yet.',
             );
           }
 
@@ -74,7 +75,7 @@ class VendorDetailScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
-                          vendor.type.name.toUpperCase(),
+                          _typeLabel(vendor.type),
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
                         ),
                       ),
