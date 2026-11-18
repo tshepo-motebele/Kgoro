@@ -190,6 +190,17 @@ class FirestoreService {
   Future<void> updateOrderStatus(String orderId, OrderStatus status) =>
       _db.collection('orders').doc(orderId).update({'status': status.index});
 
+  Future<void> submitOrderRating({
+    required String orderId,
+    required int rating,
+    String comment = '',
+  }) =>
+      _db.collection('orders').doc(orderId).update({
+        'rating': rating,
+        'ratingComment': comment,
+        'ratedAt': DateTime.now().toIso8601String(),
+      });
+
   /// Cancels an order — only valid while status is still [OrderStatus.pending].
   Future<void> cancelOrder(String orderId, {String? reason}) =>
       _db.collection('orders').doc(orderId).update({

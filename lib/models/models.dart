@@ -366,6 +366,9 @@ class KgoroOrder {
   final String? driverId;
   final OrderStatus status;
   final DateTime createdAt;
+  final int? rating;
+  final String? ratingComment;
+  final String? vendorName;
 
   KgoroOrder({
     required this.id,
@@ -382,6 +385,9 @@ class KgoroOrder {
     this.driverId,
     this.status = OrderStatus.pending,
     required this.createdAt,
+    this.rating,
+    this.ratingComment,
+    this.vendorName,
   });
 
   factory KgoroOrder.fromMap(String id, Map<String, dynamic> map) => KgoroOrder(
@@ -399,6 +405,9 @@ class KgoroOrder {
         driverId: map['driverId'],
         status: OrderStatus.values[map['status'] ?? 0],
         createdAt: _parseTimestamp(map['createdAt']),
+        rating: map['rating'] as int?,
+        ratingComment: map['ratingComment'],
+        vendorName: map['vendorName'],
       );
 
   /// Handles both Firestore Timestamp objects and ISO-8601 strings.

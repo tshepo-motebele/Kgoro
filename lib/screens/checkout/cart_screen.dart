@@ -4,6 +4,7 @@ import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
+import '../../services/payment_service.dart';
 import '../../services/pricing_service.dart';
 import '../../widgets/common_widgets.dart';
 import 'order_confirmation_screen.dart';
@@ -19,6 +20,7 @@ class CartScreen extends ConsumerStatefulWidget {
 class _CartScreenState extends ConsumerState<CartScreen> {
   String? _dropoffArea;
   bool _placing = false;
+  String _paymentMethod = "cod"; // cod or payfast
   bool _ageConfirmed = false; // 18+ check for liquor orders
 
   bool get _isLiquorOrder => widget.vendor.type == ServiceType.liquor;
@@ -218,6 +220,23 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ),
                 const Divider(),
                 _priceRow('Total', total, bold: true),
+                const SizedBox(height: 16),
+                const Text('Payment method', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                const SizedBox(height: 8),
+                RadioListTile<String>(
+                  value: 'cod',
+                  groupValue: _paymentMethod,
+                  title: const Text('Cash on delivery'),
+                  subtitle: const Text('Pay the driver when you receive your order'),
+                  onChanged: (v) => setState(() => _paymentMethod = v!),
+                ),
+                RadioListTile<String>(
+                  value: 'payfast',
+                  groupValue: _paymentMethod,
+                  title: const Text('Pay with PayFast'),
+                  subtitle: const Text('Card, EFT or instant EFT'),
+                  onChanged: (v) => setState(() => _paymentMethod = v!),
+                ),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: canCheckout
@@ -295,17 +314,36 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       'dropoffLng': dropoffLng,
       'status': OrderStatus.pending.index,
       'createdAt': DateTime.now().toIso8601String(),
+      'vendorName': widget.vendor.name,
       if (_isLiquorOrder) 'ageVerified': true,
     };
 
     try {
       final ref2 = await ref.read(firestoreServiceProvider).createOrder(orderData);
+      final orderId = ref2.id;
+
+      if (_paymentMethod == 'payfast') {
+        final userEmail = user?.email ?? 'customer@kgoro.app';
+        final started = await PaymentService.initiatePayment(
+          orderId: orderId,
+          amountRand: total,
+          itemName: 'Kgoro order from \${widget.vendor.name}',
+          email: userEmail,
+          firstName: user?.fullName.split(' ').first ?? 'Customer',
+        );
+        if (!started && mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Could not open payment page. Order saved — you can pay later or use cash.')),
+          );
+        }
+      }
+
       ref.read(cartProvider.notifier).clear();
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) =>
-              OrderConfirmationScreen(orderId: ref2.id, total: total),
+              OrderConfirmationScreen(orderId: orderId, total: total),
         ),
       );
     } catch (e) {

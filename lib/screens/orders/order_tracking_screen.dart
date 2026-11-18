@@ -6,6 +6,7 @@ import '../../core/theme.dart';
 import '../../models/models.dart';
 import '../../providers/providers.dart';
 import '../../widgets/common_widgets.dart';
+import 'rate_order_screen.dart';
 
 /// Live order tracking screen — streams /orders/{orderId} in real time.
 /// Customer sees a status timeline updating as the driver progresses.
@@ -54,6 +55,23 @@ class OrderTrackingScreen extends ConsumerWidget {
               const SizedBox(height: 12),
               _Timeline(current: status),
               const SizedBox(height: 24),
+
+              if (status == OrderStatus.delivered && (order.rating == null || order.rating == 0))
+                ElevatedButton.icon(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => RateOrderScreen(
+                        orderId: order.id,
+                        vendorName: order.vendorName ?? 'the vendor',
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.star_rounded),
+                  label: const Text('Rate this order'),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.naledi, foregroundColor: Colors.white),
+                ),
+              if (status == OrderStatus.delivered && (order.rating == null || order.rating == 0))
+                const SizedBox(height: 24),
 
               // ── Driver card ──────────────────────────────────────────────────
               if (driverId != null) ...[
