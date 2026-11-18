@@ -28,3 +28,10 @@ coverage/
 
 # Environment variables
 .env
+
+# Crash/build debris
+hs_err_pid*.log
+.kotlin/
+*.zip
+extracted_assets/
+all_screens.txt

@@ -1,0 +1,71 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # .env and lib/firebase_options.dart are gitignored (real keys never live
+      # in the repo). CI creates harmless stubs so the code compiles; the
+      # resulting APK is a compile check, NOT a shippable build.
+      - name: Create stub .env
+        run: cp .env.template .env
+
+      - name: Create stub firebase_options.dart
+        run: |
+          cat > lib/firebase_options.dart <<'EOF'
+          import 'package:firebase_core/firebase_core.dart';
+
+          class DefaultFirebaseOptions {
+            static const FirebaseOptions currentPlatform = FirebaseOptions(
+              apiKey: 'ci-stub',
+              appId: '1:0:android:0',
+              messagingSenderId: '0',
+              projectId: 'ci-stub',
+            );
+          }
+          EOF
+
+      - run: flutter pub get
+      - run: flutter analyze --no-fatal-infos
+      - run: flutter test
+
+      - name: Build debug APK
+        run: flutter build apk --debug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kgoro-debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+
+  functions:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --no-audit --no-fund
+      - name: Syntax check
+        run: node --check index.js

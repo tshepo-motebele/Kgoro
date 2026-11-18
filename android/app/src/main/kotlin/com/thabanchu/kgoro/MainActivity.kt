@@ -1,4 +1,4 @@
-package com.example.kgoro
+package com.thabanchu.kgoro
 
 import io.flutter.embedding.android.FlutterActivity
 

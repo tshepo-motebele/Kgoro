@@ -17,7 +17,7 @@ val localProperties = Properties().also { props ->
 }
 
 android {
-    namespace = "com.example.kgoro"
+    namespace = "com.thabanchu.kgoro"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
