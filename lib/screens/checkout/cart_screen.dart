@@ -339,6 +339,18 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       }
 
       ref.read(cartProvider.notifier).clear();
+      // Remember this area for next time
+      if (_dropoffArea != null && user != null) {
+        final areas = List<String>.from(user.savedAreas);
+        if (!areas.contains(_dropoffArea)) {
+          areas.insert(0, _dropoffArea!);
+          if (areas.length > 5) areas.removeLast();
+          await ref.read(firestoreServiceProvider).updateUser(user.id, {
+            'savedAreas': areas,
+            'localArea': _dropoffArea,
+          });
+        }
+      }
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(

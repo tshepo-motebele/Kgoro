@@ -15,6 +15,9 @@ class FirestoreService {
   final _db = FirebaseFirestore.instance;
 
   // ---- Users ----
+  Future<void> updateUser(String uid, Map<String, dynamic> data) =>
+      _db.collection('users').doc(uid).update(data);
+
   Future<void> upsertUser(AppUser user) =>
       _db.collection('users').doc(user.id).set(user.toMap(), SetOptions(merge: true));
 

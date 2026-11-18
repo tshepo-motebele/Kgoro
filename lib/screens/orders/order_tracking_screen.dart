@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants.dart';
 import '../../core/theme.dart';
@@ -44,7 +45,33 @@ class OrderTrackingScreen extends ConsumerWidget {
             children: [
               // ── Status Banner ───────────────────────────────────────────────
               _StatusBanner(status: status),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              if (order.dropoffLat != 0 && order.dropoffLng != 0)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: SizedBox(
+                    height: 160,
+                    child: GoogleMap(
+                      initialCameraPosition: CameraPosition(
+                        target: LatLng(order.dropoffLat, order.dropoffLng),
+                        zoom: 15,
+                      ),
+                      markers: {
+                        Marker(
+                          markerId: const MarkerId('dropoff'),
+                          position: LatLng(order.dropoffLat, order.dropoffLng),
+                          infoWindow: const InfoWindow(title: 'Delivery location'),
+                        ),
+                      },
+                      myLocationEnabled: false,
+                      zoomControlsEnabled: false,
+                      liteModeEnabled: true,
+                    ),
+                  ),
+                ),
+              if (order.dropoffLat != 0 && order.dropoffLng != 0)
+                const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
               // ── Timeline ────────────────────────────────────────────────────
               const Text('Progress',

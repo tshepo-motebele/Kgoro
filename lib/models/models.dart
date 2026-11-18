@@ -8,6 +8,7 @@ class AppUser {
   final String phone;
   final String? email;
   final String localArea;
+  final List<String> savedAreas;
   final double? homeLat;
   final double? homeLng;
   final bool isResidencyVerified;
@@ -21,6 +22,7 @@ class AppUser {
     required this.phone,
     this.email,
     required this.localArea,
+    this.savedAreas = const [],
     this.homeLat,
     this.homeLng,
     this.isResidencyVerified = false,
@@ -35,6 +37,7 @@ class AppUser {
         phone: map['phone'] ?? '',
         email: map['email'],
         localArea: map['localArea'] ?? '',
+        savedAreas: List<String>.from(map['savedAreas'] ?? []),
         homeLat: (map['homeLat'] as num?)?.toDouble(),
         homeLng: (map['homeLng'] as num?)?.toDouble(),
         isResidencyVerified: map['isResidencyVerified'] ?? false,
@@ -49,6 +52,7 @@ class AppUser {
         'phone': phone,
         'email': email,
         'localArea': localArea,
+        'savedAreas': savedAreas,
         'homeLat': homeLat,
         'homeLng': homeLng,
         'isResidencyVerified': isResidencyVerified,
