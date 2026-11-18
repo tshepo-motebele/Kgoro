@@ -11,6 +11,37 @@ import '../../providers/providers.dart';
 import '../../widgets/common_widgets.dart';
 import 'product_edit_screen.dart';
 
+
+Color _typeAccent(ServiceType type) {
+  switch (type) {
+    case ServiceType.groceries:
+      return const Color(0xFF10B981); // green
+    case ServiceType.food:
+      return const Color(0xFFF59E0B); // amber
+    case ServiceType.liquor:
+      return const Color(0xFF8B5CF6); // purple
+    case ServiceType.laundry:
+      return const Color(0xFF3B82F6); // blue
+    case ServiceType.cab:
+      return const Color(0xFFEF4444); // red
+  }
+}
+
+IconData _typeIcon(ServiceType type) {
+  switch (type) {
+    case ServiceType.groceries:
+      return Icons.shopping_basket_rounded;
+    case ServiceType.food:
+      return Icons.restaurant_rounded;
+    case ServiceType.liquor:
+      return Icons.local_bar_rounded;
+    case ServiceType.laundry:
+      return Icons.local_laundry_service_rounded;
+    case ServiceType.cab:
+      return Icons.local_taxi_rounded;
+  }
+}
+
 /// Full vendor dashboard with 3 tabs: Orders, Menu/Products, Store Settings.
 class VendorDashboardScreen extends ConsumerStatefulWidget {
   final Vendor vendor;
@@ -39,31 +70,45 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    final accent = _typeAccent(widget.vendor.type);
+    final typeName = widget.vendor.type == ServiceType.groceries
+        ? 'Groceries'
+        : widget.vendor.type == ServiceType.food
+            ? 'Food'
+            : widget.vendor.type == ServiceType.liquor
+                ? 'Liquor'
+                : widget.vendor.type == ServiceType.cab
+                    ? 'Rides'
+                    : 'Laundry';
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        backgroundColor: accent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Row(
           children: [
-            Text(widget.vendor.name,
-                style: const TextStyle(
-                    fontWeight: FontWeight.w800,
-                    fontSize: 18,
-                    color: AppColors.primaryDark)),
-            Text(
-            widget.vendor.type == ServiceType.groceries
-                  ? 'Groceries'
-                  : widget.vendor.type == ServiceType.food
-                      ? 'Fast Food'
-                      : widget.vendor.type == ServiceType.liquor
-                          ? 'Liquor'
-                          : widget.vendor.type == ServiceType.cab
-                              ? 'Cab / Rides'
-                              : 'Laundry',
-              style: const TextStyle(
-                  fontSize: 12,
-                  color: AppColors.textMuted,
-                  fontWeight: FontWeight.w500),
+            Icon(_typeIcon(widget.vendor.type), color: Colors.white, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.vendor.name,
+                      style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                          color: Colors.white)),
+                  Text(
+                    typeName,
+                    style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.white70,
+                        fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -72,7 +117,9 @@ class _VendorDashboardScreenState extends ConsumerState<VendorDashboardScreen>
         ],
         bottom: TabBar(
           controller: _tabController,
-          labelColor: AppColors.primary,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
+          indicatorColor: Colors.white,
           unselectedLabelColor: AppColors.textMuted,
           indicatorColor: AppColors.primary,
           dividerColor: Colors.transparent,
@@ -466,11 +513,14 @@ class _ProductTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Card(
+      elevation: 0,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.all(12),
         leading: Container(
-          width: 52,
-          height: 52,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
             color: AppColors.surfaceTint,
             borderRadius: BorderRadius.circular(12),
@@ -478,10 +528,14 @@ class _ProductTile extends ConsumerWidget {
           child: product.imageUrl.isNotEmpty
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.network(product.imageUrl, fit: BoxFit.cover),
+                  child: CachedNetworkImage(
+                    imageUrl: product.imageUrl,
+                    fit: BoxFit.cover,
+                    placeholder: (_, __) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                    errorWidget: (_, __, ___) => const Icon(Icons.image_rounded, color: AppColors.primaryLight),
+                  ),
                 )
-              : const Icon(Icons.image_rounded,
-                  color: AppColors.primaryLight, size: 28),
+              : const Icon(Icons.add_photo_alternate_rounded, color: AppColors.primaryLight, size: 28),
         ),
         title: Row(
           children: [

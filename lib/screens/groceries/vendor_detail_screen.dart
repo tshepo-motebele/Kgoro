@@ -43,30 +43,65 @@ class VendorDetailScreen extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              // ── Vendor banner ───────────────────────────────────────────
+              // ── Modern vendor hero ──────────────────────────────────────
               Hero(
                 tag: 'vendor_image_${vendor.id}',
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    height: 140,
-                    width: double.infinity,
-                    color: AppColors.veld.withValues(alpha: 0.12),
-                    child: vendor.imageUrl.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: vendor.imageUrl,
-                            fit: BoxFit.cover,
-                            placeholder: (_, __) => const Center(
-                                child: CircularProgressIndicator()),
-                            errorWidget: (_, __, ___) => const Icon(
-                                Icons.storefront_rounded,
-                                size: 48,
-                                color: AppColors.veld),
-                          )
-                        : const Icon(Icons.storefront_rounded,
-                            size: 48, color: AppColors.veld),
-                  ),
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        height: 180,
+                        width: double.infinity,
+                        color: AppColors.surfaceTint,
+                        child: vendor.imageUrl.isNotEmpty
+                            ? CachedNetworkImage(
+                                imageUrl: vendor.imageUrl,
+                                fit: BoxFit.cover,
+                                placeholder: (_, __) => const Center(child: CircularProgressIndicator()),
+                                errorWidget: (_, __, ___) => const Icon(Icons.storefront_rounded, size: 56, color: AppColors.primaryLight),
+                              )
+                            : const Icon(Icons.storefront_rounded, size: 56, color: AppColors.primaryLight),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 12,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.black54,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          vendor.type.name.toUpperCase(),
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                vendor.name,
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.primaryDark),
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  Icon(Icons.location_on_rounded, size: 16, color: AppColors.textMuted),
+                  const SizedBox(width: 4),
+                  Text(vendor.localArea, style: TextStyle(color: AppColors.textMuted)),
+                  if (vendor.isOpen) ...[
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(color: AppColors.success.withOpacity(0.15), borderRadius: BorderRadius.circular(8)),
+                      child: const Text('Open', style: TextStyle(color: AppColors.success, fontWeight: FontWeight.w700, fontSize: 12)),
+                    ),
+                  ],
+                ],
               ),
               const SizedBox(height: 20),
 
@@ -124,22 +159,19 @@ class _ProductRow extends ConsumerWidget {
           children: [
             // ── Product image ─────────────────────────────────────────────
             ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               child: Container(
-                width: 56,
-                height: 56,
-                color: const Color(0xFFF3EEE6),
+                width: 72,
+                height: 72,
+                color: AppColors.surfaceTint,
                 child: product.imageUrl.isNotEmpty
                     ? CachedNetworkImage(
                         imageUrl: product.imageUrl,
                         fit: BoxFit.cover,
-                        placeholder: (_, __) =>
-                            const Center(child: CircularProgressIndicator()),
-                        errorWidget: (_, __, ___) => const Icon(
-                            Icons.image_not_supported_rounded,
-                            color: AppColors.muted),
+                        placeholder: (_, __) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                        errorWidget: (_, __, ___) => const Icon(Icons.image_not_supported_rounded, color: AppColors.textMuted),
                       )
-                    : const Icon(Icons.inventory_2_outlined, color: Colors.grey),
+                    : const Icon(Icons.fastfood_rounded, color: AppColors.primaryLight, size: 32),
               ),
             ),
             const SizedBox(width: 12),
