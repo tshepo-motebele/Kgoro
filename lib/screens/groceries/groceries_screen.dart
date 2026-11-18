@@ -17,7 +17,18 @@ class GroceriesScreen extends ConsumerWidget {
         ref.watch(firestoreServiceProvider).watchVendorsByType(ServiceType.groceries);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Groceries')),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF10B981),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Row(
+          children: [
+            Icon(Icons.shopping_basket_rounded),
+            SizedBox(width: 8),
+            Text('Groceries', style: TextStyle(fontWeight: FontWeight.w800)),
+          ],
+        ),
+      ),
       body: StreamBuilder<List<Vendor>>(
         stream: vendorsStream,
         builder: (context, snapshot) {

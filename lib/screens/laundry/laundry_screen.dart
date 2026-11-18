@@ -17,7 +17,18 @@ class LaundryScreen extends ConsumerWidget {
         ref.watch(firestoreServiceProvider).watchVendorsByType(ServiceType.laundry);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Laundry')),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF3B82F6),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: const Row(
+          children: [
+            Icon(Icons.local_laundry_service_rounded),
+            SizedBox(width: 8),
+            Text('Laundry', style: TextStyle(fontWeight: FontWeight.w800)),
+          ],
+        ),
+      ),
       body: StreamBuilder<List<Vendor>>(
         stream: vendorsStream,
         builder: (context, snapshot) {

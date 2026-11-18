@@ -115,12 +115,24 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
           length: 2,
           child: Scaffold(
             appBar: AppBar(
-              title: const Text('Driver dashboard'),
+              backgroundColor: const Color(0xFFEF4444),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              title: const Row(
+                children: [
+                  Icon(Icons.local_taxi_rounded, color: Colors.white),
+                  SizedBox(width: 10),
+                  Text('Driver Dashboard', style: TextStyle(fontWeight: FontWeight.w800)),
+                ],
+              ),
               actions: const [SignOutIconButton()],
               bottom: const TabBar(
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                indicatorColor: Colors.white,
                 tabs: [
-                  Tab(text: 'Dashboard'),
-                  Tab(text: 'Offers'),
+                  Tab(icon: Icon(Icons.dashboard_rounded), text: 'Dashboard'),
+                  Tab(icon: Icon(Icons.local_offer_rounded), text: 'Offers'),
                 ],
               ),
             ),
@@ -130,10 +142,19 @@ class _DriverDashboardScreenState extends ConsumerState<DriverDashboardScreen> {
             padding: const EdgeInsets.all(20),
             children: [
               Card(
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                color: profile.isOnline ? const Color(0xFF10B981).withOpacity(0.1) : null,
                 child: Padding(
                   padding: const EdgeInsets.all(18),
                   child: Row(
                     children: [
+                      Icon(
+                        profile.isOnline ? Icons.wifi_rounded : Icons.wifi_off_rounded,
+                        color: profile.isOnline ? AppColors.success : Colors.grey,
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
